@@ -1,0 +1,510 @@
+{#
+# 2018 Paysera
+#
+# NOTICE OF LICENSE
+#
+# This source file is subject to the Academic Free License (AFL 3.0)
+# that is bundled with this package in the file LICENSE.txt.
+# It is also available through the world-wide-web at this URL:
+# http://opensource.org/licenses/afl-3.0.php
+# If you did not receive a copy of the license and are unable to
+# obtain it through the world-wide-web, please send an email
+# to support@paysera.com so we can send you a copy immediately.
+#
+# @author    Paysera <plugins@paysera.com>
+# @copyright 2018 Paysera
+# @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+# International Registered Trademark & Property of Paysera
+#}
+
+{{ header }}{{ column_left }}
+<div id="content">
+    <div class="page-header">
+        <div class="container-fluid">
+            <div class="pull-right">
+                <button type="submit"
+                        title="{{ button_save }}"
+                        class="btn btn-primary"
+                        form="form-payment"
+                        data-toggle="tooltip">
+                    <i class="fa fa-save"></i>
+                </button>
+                <a href="{{ cancel }}"
+                   title="{{ button_cancel }}"
+                   class="btn btn-default"
+                   data-toggle="tooltip">
+                    <i class="fa fa-reply"></i>
+                </a>
+            </div>
+
+            <h1>{{ heading_title }}</h1>
+
+            <ul class="breadcrumb">
+                {% for breadcrumb in breadcrumbs %}
+                    <li>
+                        <a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        {% if error_warning %}
+            <div class="alert alert-danger alert-dismissible">
+                <i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+                <button type="button" class="close" data-dismiss="alert">
+                    &times;
+                </button>
+            </div>
+        {% endif %}
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <i class="fa fa-pencil"></i> {{ text_edit }}
+                </h3>
+            </div>
+
+            <div class="panel-body">
+                <form action="{{ action }}"
+                      method="post"
+                      enctype="multipart/form-data"
+                      id="form-payment"
+                      class="form-horizontal">
+                    <ul class="nav nav-tabs" id="tabs">
+                        <li class="active">
+                            {% if error_account_tab %}
+                                {% set style = 'color: red' %}
+                            {% else %}
+                                {% set style = '' %}
+                            {% endif %}
+                            <a href="#tab-account" data-toggle="tab" style="{{ style }}">{{ tab_account }}</a>
+                        </li>
+                        <li>
+                            <a href="#tab-payment" data-toggle="tab">{{ tab_payment }}</a>
+                        </li>
+                        <li>
+                            {% if error_order_status_tab %}
+                                {% set style = 'color: red' %}
+                            {% else %}
+                                {% set style = '' %}
+                            {% endif %}
+                            <a href="#tab-order-status" data-toggle="tab" style="{{ style }}">{{ tab_order_status }}</a>
+                        </li>
+                        <li>
+                            <a href="#tab-additions" data-toggle="tab">{{ tab_additions }}</a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="tab-account">
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="input-status">
+                                    {{ label_status }}
+                                </label>
+
+                                <div class="col-sm-10">
+                                    <select name="payment_paysera_status"
+                                            id="input-status"
+                                            class="form-control">
+                                        {% if payment_paysera_status %}
+                                            <option value="1" selected="selected">{{ text_on }}</option>
+                                            <option value="0">{{ text_off }}</option>
+                                        {% else %}
+                                            <option value="1">{{ text_on }}</option>
+                                            <option value="0" selected="selected">{{ text_off }}</option>
+                                        {% endif %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="entry-project">
+                                    {{ label_project }}
+                                </label>
+
+                                <div class="col-sm-10">
+                                    <input type="number"
+                                           name="payment_paysera_project"
+                                           id="entry-project"
+                                           class="form-control"
+                                           value="{{ payment_paysera_project }}"
+                                           placeholder="{{ entry_project }}" />
+
+                                    {% if error_payment_paysera_project %}
+                                        <div class="text-danger">{{ error_payment_paysera_project }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="entry-sign">
+                                    {{ label_sign }}
+                                </label>
+
+                                <div class="col-sm-10">
+                                    <input type="text"
+                                           name="payment_paysera_sign"
+                                           id="entry-sign"
+                                           class="form-control"
+                                           value="{{ payment_paysera_sign }}"
+                                           placeholder="{{ entry_sign }}" />
+
+                                    {% if error_payment_paysera_sign %}
+                                        <div class="text-danger">{{ error_payment_paysera_sign }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="entry-test">
+                                    {{ label_test }}
+                                </label>
+
+                                <div class="col-sm-10">
+                                    <select name="payment_paysera_test"
+                                            id="entry-test"
+                                            class="form-control">
+                                        {% if payment_paysera_test %}
+                                            <option value="1" selected="selected">{{ text_on }}</option>
+                                            <option value="0">{{ text_off }}</option>
+                                        {% else %}
+                                            <option value="1">{{ text_on }}</option>
+                                            <option value="0" selected="selected">{{ text_off }}</option>
+                                        {% endif %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="input-sort-order">
+                                    {{ label_sort_order }}
+                                </label>
+
+                                <div class="col-sm-10">
+                                    <input type="text"
+                                           name="payment_paysera_sort_order"
+                                           id="input-sort-order"
+                                           class="form-control"
+                                           value="{{ payment_paysera_sort_order }}"
+                                           placeholder="{{ entry_sort_order }}" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane" id="tab-payment">
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="input-total" >
+                                    <span data-toggle="tooltip" title="{{ help_total }}">
+                                        {{ label_total }}
+                                    </span>
+                                </label>
+
+                                <div class="col-sm-10">
+                                    <input type="number"
+                                           name="payment_paysera_total"
+                                           id="input-total"
+                                           class="form-control"
+                                           value="{{ payment_paysera_total }}"
+                                           placeholder="{{ entry_total }}" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="label-title">
+                                    {{ label_title }}
+                                </label>
+
+                                <div class="col-sm-10">
+                                    <input type="text"
+                                           name="payment_paysera_title"
+                                           id="entry-title"
+                                           class="form-control"
+                                           value="{{ payment_paysera_title }}"
+                                           placeholder="{{ entry_title }}" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="entry-description">
+                                    {{ label_description }}
+                                </label>
+
+                                <div class="col-sm-10">
+                                    <input type="text"
+                                           name="payment_paysera_description"
+                                           id="entry-description"
+                                           class="form-control"
+                                           value="{{ payment_paysera_description }}"
+                                           placeholder="{{ entry_description }}" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="input-display">
+                                    {{ label_paymentlist }}
+                                </label>
+
+                                <div class="col-sm-10">
+                                    <select name="payment_paysera_display_payments_list"
+                                            id="input-display"
+                                            class="form-control">
+                                        {% if payment_paysera_display_payments_list %}
+                                            <option value="1" selected="selected">{{ text_on }}</option>
+                                            <option value="0">{{ text_off }}</option>
+                                        {% else %}
+                                            <option value="1">{{ text_on }}</option>
+                                            <option value="0" selected="selected">{{ text_off }}</option>
+                                        {% endif %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="category">
+                                    <span data-toggle="tooltip" title="{{ help_multi_select }}">
+                                        {{ label_multi_select }}
+                                    </span>
+                                </label>
+
+                                <div class="col-sm-10">
+                                    <select name="category"
+                                            id="category"
+                                            class="form-control">
+                                        <option value="0">
+                                            {{ text_select }}
+                                        </option>
+                                        {% for id, country in paysera_countries %}
+                                            <option value="{{ id }}">
+                                                {{ country  }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+
+                                    <div id="paysera-category" class="well well-sm">
+                                        {% for id,country in paysera_selected_countries %}
+                                            <div id="category{{ id }}">
+                                                <i class="fa fa-minus-circle"></i> {{ country }}
+
+                                                <input type="hidden"
+                                                       name="payment_paysera_category[]"
+                                                       value="{{ id }}" />
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="input-grid">
+                                    {{ label_grid_view }}
+                                </label>
+
+                                <div class="col-sm-10">
+                                    <select name="payment_paysera_grid_view" id="input-grid" class="form-control">
+                                        {% if payment_paysera_grid_view %}
+                                            <option value="1" selected="selected">{{ text_on }}</option>
+                                            <option value="0">{{ text_off }}</option>
+                                        {% else %}
+                                            <option value="1">{{ text_on }}</option>
+                                            <option value="0" selected="selected">{{ text_off }}</option>
+                                        {% endif %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="input-grid">
+                                    {{ label_buyer_consent }}
+                                </label>
+
+                                <div class="col-sm-10">
+                                    <select name="payment_paysera_buyer_consent" id="input-grid" class="form-control">
+                                        {% if payment_paysera_buyer_consent %}
+                                            <option value="1" selected="selected">{{ text_on }}</option>
+                                            <option value="0">{{ text_off }}</option>
+                                        {% else %}
+                                            <option value="1">{{ text_on }}</option>
+                                            <option value="0" selected="selected">{{ text_off }}</option>
+                                        {% endif %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="input-geo-zone">
+                                    {{ label_geo_zone }}
+                                </label>
+
+                                <div class="col-sm-10">
+                                    <select name="payment_paysera_geo_zone_id"
+                                            id="input-geo-zone"
+                                            class="form-control">
+                                        <option value="">{{ text_all_zones }}</option>
+
+                                        {% for geo_zone in geo_zones %}
+                                            {% if geo_zone.geo_zone_id ==  payment_paysera_geo_zone_id %}
+                                                <option value="{{ geo_zone.geo_zone_id }}" selected="selected">
+                                                    {{ geo_zone.name }}
+                                                </option>
+                                            {% else %}
+                                                <option value="{{ geo_zone.geo_zone_id }}">
+                                                    {{ geo_zone.name }}
+                                                </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane" id="tab-order-status">
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="input-new-order-status">
+                                    {{ label_new_order_status }}
+                                </label>
+
+                                <div class="col-sm-10">
+                                    <select name="payment_paysera_new_order_status_id"
+                                            id="input-new-order-status"
+                                            class="form-control">
+                                        {% for order_status in order_statuses %}
+                                            {% if order_status.order_status_id == payment_paysera_new_order_status_id %}
+                                                <option value="{{ order_status.order_status_id }}" selected="selected">
+                                                    {{ order_status.name }}
+                                                </option>
+                                            {% else %}
+                                                <option value="{{ order_status.order_status_id }}">
+                                                    {{ order_status.name }}
+                                                </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+
+                                    {% if error_payment_paysera_new_order_status_id %}
+                                        <div class="text-danger">{{ error_payment_paysera_new_order_status_id }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="input-order-status">
+                                    {{ label_order_status }}
+                                </label>
+
+                                <div class="col-sm-10">
+                                    <select name="payment_paysera_paid_status_id"
+                                            id="input-order-status"
+                                            class="form-control">
+                                        {% for order_status in order_statuses %}
+                                            {% if order_status.order_status_id == payment_paysera_paid_status_id %}
+                                                <option value="{{ order_status.order_status_id }}" selected="selected">
+                                                    {{ order_status.name }}
+                                                </option>
+                                            {% else %}
+                                                <option value="{{ order_status.order_status_id }}">
+                                                    {{ order_status.name }}
+                                                </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+
+                                    {% if error_payment_paysera_paid_status_id %}
+                                        <div class="text-danger">{{ error_payment_paysera_paid_status_id }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="input-canceled-order-status">
+                                    {{ label_canceled_status }}
+                                </label>
+
+                                <div class="col-sm-10">
+                                    <select name="payment_paysera_pending_status_id"
+                                            id="input-canceled-order-status"
+                                            class="form-control">
+                                        {% for order_status in order_statuses %}
+                                            {% if order_status.order_status_id == payment_paysera_pending_status_id %}
+                                                <option value="{{ order_status.order_status_id }}" selected="selected">
+                                                    {{ order_status.name }}
+                                                </option>
+                                            {% else %}
+                                                <option value="{{ order_status.order_status_id }}">
+                                                    {{ order_status.name }}
+                                                </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+
+                                    {% if error_payment_paysera_pending_status_id %}
+                                        <div class="text-danger">{{ error_payment_paysera_pending_status_id }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane" id="tab-additions">
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="entry-quality">
+                                    {{ label_quality }}
+                                </label>
+
+                                <div class="col-sm-10">
+                                    <select name="payment_paysera_quality"
+                                            id="entry-quality"
+                                            class="form-control">
+                                        {% if payment_paysera_quality %}
+                                            <option value="1" selected="selected">{{ text_on }}</option>
+                                            <option value="0">{{ text_off }}</option>
+                                        {% else %}
+                                            <option value="1">{{ text_on }}</option>
+                                            <option value="0" selected="selected">{{ text_off }}</option>
+                                        {% endif %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="input-owner">
+                                    {{ label_owner }}
+                                </label>
+
+                                <div class="col-sm-10">
+                                    <select name="payment_paysera_owner"
+                                            id="input-owner"
+                                            class="form-control">
+                                        {% if payment_paysera_owner %}
+                                            <option value="1" selected="selected">{{ text_on }}</option>
+                                            <option value="0">{{ text_off }}</option>
+                                        {% else %}
+                                            <option value="1">{{ text_on }}</option>
+                                            <option value="0" selected="selected">{{ text_off }}</option>
+                                        {% endif %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="entry-owner-code">
+                                    {{ label_owner_code }}
+                                </label>
+
+                                <div class="col-sm-10">
+                                    <input type="text"
+                                           name="payment_paysera_owner_code"
+                                           id="entry-owner-code"
+                                           class="form-control"
+                                           value="{{ payment_paysera_owner_code }}"
+                                           placeholder="{{ entry_owner_code }}" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{{ footer }}

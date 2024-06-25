@@ -1,0 +1,22 @@
+<style>
+	.loading {
+		position: fixed;
+		float: left;
+		top: 48%;
+		left: 40%;
+		width: 50%;
+		word-wrap: break-word;
+	}
+
+</style>
+
+<div class="loading">
+  <p>
+    {{ text_loading }}
+  </p>
+</div>
+
+<script>
+	window.parent.processorCall('{{return_url}}');
+
+</script>

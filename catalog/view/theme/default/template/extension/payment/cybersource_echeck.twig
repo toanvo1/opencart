@@ -1,0 +1,362 @@
+<div id="dav-block">
+  {% if not address_match %}
+    <h3>
+      {{ text_delivery_address }}
+    </h3>
+    {% if error_address %}
+      <div class="alert alert-danger alert-dismissible">
+        {{ text_warning }}
+        {{ error_address }}
+      </div>
+      <div class="buttons">
+        <div class="pull-right">
+          <input type="button" value="{{ button_continue_address }}" id="button-continue-address" data-loading-text="{{ text_loading }}" class="btn btn-primary button-spacing" onclick="buttonContinueAddressEcheck()" />
+          <input type="button" value="{{ button_edit_address }}" id="button-edit-address" data-loading-text="{{ text_loading }}" class="btn btn-primary button-spacing" onclick="buttonEditAddress()" />
+        </div>
+      </div>
+    {% else %}
+      <div class="row">
+        <div class="col-sm-4 address-border">
+          <div class="radio">
+            <label>
+              <span><input type="radio" value="recommended_address" name="address" id="recommended-address" checked="checked" /></span>
+              <span class="h4">{{ text_recommended_address }}</span>
+            </label>
+          </div>
+          <address class="address-block">
+            {{ recommended_address_format.address }}
+          </address>
+        </div>
+        <div class="col-sm-4 address-border">
+          <div class="radio">
+            <label>
+              <span><input type="radio" value="entered_address" name="address" id="entered-address" /></span>
+              <span class="h4">{{ text_address_you_entered }}</span>
+            </label>
+          </div>
+          <address class="address-block">
+            {{ entered_address_format.address }}
+          </address>
+        </div>
+      </div>
+      <div class="buttons">
+        <div class="pull-right">
+          <input type="button" value="{{ button_continue_address }}" id="button-selected-address" data-loading-text="{{ text_loading }}" class="btn btn-primary" onclick="buttonSelectedAddressEcheck()" />
+        </div>
+      </div>
+    {% endif %}
+  {% endif %}
+</div>
+
+<div id="echeck" class="display-none">
+  <div>
+    <h4 class="h4">
+      {{ method_name }}
+    </h4>
+  </div>
+  <div id="error"></div>
+  <div id="error_msg"></div>
+  <div class="row">
+    <div class="col-sm-4">
+      <label class="control-label" for="account-number"><b>{{ text_account_number }}</b></label>
+      <input type="text" placeholder="{{ text_enter_account_number }}" class="form-control" id="account-number" />
+    </div>
+    <div class="col-sm-4">
+      <label class="control-label" for="account-type"><b>{{ text_account_type }}</b></label>
+      <select name="account-type" class="form-control" id="account-type">
+        <option value="C">
+          {{ text_checking }}
+        </option>
+        <option value="S">
+          {{ text_savings }}
+        </option>
+        <option value="X">
+          {{ text_corporate_checking }}
+        </option>
+      </select>
+    </div>
+    <div class="col-sm-4">
+      <label class="control-label" for="account-routing-number"><b>{{ text_routing_number }}</b></label>
+      <input type="text" placeholder="{{ text_enter_routing_number }}" class="form-control" id="account-routing-number" />
+    </div>
+  </div>
+  <div class="buttons">
+    <div class="pull-right">
+      {% if recaptcha_enabled %}
+        <input type="button" value="{{ button_confirm_order }}" id="button-confirm" data-loading-text="{{ text_loading }}" class="btn btn-primary" onclick="setRecaptcha()" />
+      {% else %}
+        <input type="button" value="{{ button_confirm_order }}" id="button-confirm" data-loading-text="{{ text_loading }}" class="btn btn-primary" onclick="onSubmit('NOTOKEN')" />
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div id="modal-timeout" class="modal fade" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">
+          {{ text_error }}
+        </h4>
+      </div>
+      <div class="modal-body"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+	.address-border {
+		border: 1px solid #ddd;
+		margin: 5px 14px;
+		padding: 10px;
+	}
+
+	.button-spacing {
+		margin: 3px;
+	}
+
+	.modal {
+		z-index: 100000 !important;
+	}
+
+	.address-block {
+		min-height: 9rem;
+		padding-left: 20px;
+	}
+
+	.display-none {
+		display: none;
+	}
+
+</style>
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		checkForAddressMatch();
+	});
+
+	function checkForAddressMatch() {
+		var dav_success = "{{ address_match }}";
+		if (dav_success == "1") {
+			if ($('#collapse-checkout-confirm').hasClass('in')) {
+				document.getElementById('echeck').style.display = "block";
+			} else {
+				setTimeout(checkForAddressMatch, 500);
+			}
+		}
+	}
+
+	function setRecaptcha() {
+		try {
+			grecaptcha.ready(function() {
+				try {
+					grecaptcha.execute('{{recaptcha_site_key}}', {
+						action: 'submit'
+					}).then(function(token) {
+						onSubmit(token);
+					});
+				} catch (err) {
+					showPopMsg('{{error_recaptcha_load_failed}}');
+				}
+			});
+		} catch (err) {
+			showPopMsg('{{error_recaptcha_load_failed}}');
+		}
+	}
+
+	function buttonSelectedAddressEcheck() {
+		var selectedRadioBtn = document.getElementsByName('address');
+		for (i = 0; i < selectedRadioBtn.length; i++) {
+			if (selectedRadioBtn[i].checked) {
+				if (selectedRadioBtn[i].value == "recommended_address") {
+					dav_address = 1;
+					shipping_address = "{{recommended_address}}";
+					shipping_city = "{{recommended_city}}";
+					shipping_state = "{{recommended_state}}";
+					shipping_country = "{{recommended_country}}";
+					shipping_postal = "{{recommended_postal_code}}";
+					document.getElementById('dav-block').style.display = "none";
+					document.getElementById('echeck').style.display = "block";
+				} else {
+					dav_address = 0;
+					document.getElementById('dav-block').style.display = "none";
+					document.getElementById('echeck').style.display = "block";
+				}
+			}
+		}
+	}
+
+	function buttonContinueAddressEcheck() {
+		dav_address = 0;
+		document.getElementById('dav-block').style.display = "none";
+		document.getElementById('echeck').style.display = "block";
+	}
+
+	function buttonEditAddress() {
+		$(document).scrollTop(100);
+		$('a[href=\'#collapse-shipping-address\']').trigger('click');
+	}
+
+	function showPopMsg(msg) {
+		$('#modal-timeout').modal('show');
+		$('.alert-dismissible').remove();
+		$('#modal-timeout .modal-body').append(`<div class="alert alert-danger alert-dismissible">	<i class="fa fa-exclamation-circle"></i> ` + msg + ` </div>`);
+	}
+
+	$("#modal-timeout .modal-header > button").click(function() {
+		$("#content *").attr('disabled', true);
+		location.reload();
+	});
+
+	var time_out_in_ms = 180000;
+	var dav_address = 0;
+	let recommended_address = [];
+	var shipping_address, shipping_city, shipping_state, shipping_country, shipping_postal;
+
+	function onSubmit(token) {
+		var field_validations = false;
+		var invalid = false;
+		var fields_valid = [];
+		var account_number = document.querySelector('#account-number').value;
+		var account_type = document.querySelector('#account-type').value;
+		var account_routing_number = document.querySelector('#account-routing-number').value;
+		var csrf = "{{ csrf_token_data }}";
+		var time = "{{ time_data }}";
+
+		if (account_number.trim() == "" || account_type.trim() == "" || account_routing_number.trim() == "") {
+			$('.alert-dismissible').remove();
+			$('#error_msg').before('<div class="alert alert-danger alert-dismissible"> {{error_mandatory_fields}} <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+		} else {
+			if (isNaN(account_number.trim()) || (account_number.trim().length > 17)) {
+				invalid = true;
+				fields_valid.push('{{text_account_number}}');
+			}
+			if (isNaN(account_routing_number.trim()) || (account_routing_number.trim().length > 9)) {
+				invalid = true;
+				fields_valid.push('{{text_routing_number}}');
+			}
+			if (invalid) {
+				$('.alert-dismissible').remove();
+				$('#error_msg').before('<div class="alert alert-danger alert-dismissible">' + fields_valid + ' {{error_invalid}} <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+			} else {
+				field_validations = true;
+			}
+		}
+		if (field_validations) {
+			try {
+				$.ajax({
+					type: 'POST',
+					url: 'index.php?route=extension/payment/cybersource_echeck/confirmPaymentRecaptcha',
+					dataType: 'json',
+					cache: false,
+					data: {
+						token: token,
+						csrf: csrf,
+						time: time
+					},
+					beforeSend: function() {
+						$('#button-confirm').button('loading');
+					},
+					success: function(response) {
+						if (response.redirect) {
+							location = response.redirect;
+						} else {
+							if (response.error) {
+								showPopMsg(response.error_warning);
+							} else {
+								invokeFlexAfterRecaptcha(response.success);
+							}
+						}
+						setTimeout(function() {
+							$('#button-confirm').button('reset');
+							showPopMsg('{{error_session}}');
+						}, time_out_in_ms);
+					},
+					error: function(xhr, ajaxOptions, thrownError) {
+						console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+						$('#button-confirm').button('reset');
+						showPopMsg('{{error_failure}}');
+					}
+				});
+			} catch (exception) {
+				showPopMsg('{{error_exception}}');
+			}
+		}
+	}
+
+	function invokeFlexAfterRecaptcha(url) {
+		var account_number = document.querySelector('#account-number').value;
+		var account_type = document.querySelector('#account-type').value;
+		var account_routing_number = document.querySelector('#account-routing-number').value;
+		try {
+			$.ajax({
+				type: 'POST',
+				url: url,
+				dataType: 'json',
+				data: {
+					account_number: account_number.trim(),
+					account_type: account_type.trim(),
+					account_routing_number: account_routing_number.trim(),
+					dav_address,
+					shipping_address,
+					shipping_city,
+					shipping_state,
+					shipping_country,
+					shipping_postal
+				},
+				beforeSend: function() {
+					$('#button-confirm').button('loading');
+				},
+				success: function(json) {
+					if (json.redirect) {
+						var page_name = (json.redirect).split("/").pop();
+						if (page_name == "checkout") {
+							showPopMsg('{{error_session}}');
+						} else {
+							window.location.href = json.redirect;
+						}
+					}
+					setTimeout(function() {
+						$('#button-confirm').button('reset');
+						showPopMsg('{{error_session}}');
+					}, time_out_in_ms);
+				},
+				error: function(xhr, ajaxOptions, thrownError) {
+					console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+					$('#button-confirm').button('reset');
+					var http_url = ((xhr.responseText).split('"redirect":').pop()).slice(1, -2);
+					http_url = http_url.replaceAll("\\", '');
+					if (http_url.startsWith('http')) {
+						var url = (http_url).split("/").pop();
+						if (url == 'success' || url == 'failure') {
+							window.location.href = http_url;
+						} else {
+							showPopMsg('{{error_failure}}');
+						}
+					} else {
+						showPopMsg('{{error_failure}}');
+					}
+				}
+			});
+		} catch (exception) {
+			showPopMsg('{{error_exception}}');
+		}
+	}
+
+</script>
+
+{% if recaptcha_enabled %}
+
+  <script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
+
+{% endif %}
+
+{% if dfp_url %}
+
+  <script type="text/javascript" src="{{ dfp_url }}"></script>
+
+  <noscript>
+    <iframe class="iframe" src="{{ dfp_url }}"></iframe>
+  </noscript>
+{% endif %}

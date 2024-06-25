@@ -1,0 +1,150 @@
+{% if error_status %}
+  <div class="alert alert-danger alert-dismissible">
+    <i class="fa fa-exclamation-circle"></i>
+    {{ error_warning }}
+    <button type="button" class="close" data-dismiss="alert">&times;</button>
+  </div>
+{% else %}
+  {% if payment_action == 'authorize' %}
+    <div id="paymentInfoAuth" class="well col-xs-12">
+      <h4>
+        <b>{{ text_authorization_details }}</b>
+      </h4>
+      <div class="form-group">
+        {% if uc_payment_method %}
+          <p>
+            <label class="col-lg-3">{{ text_payment_method }}</label>
+            <label class="control-label col-lg-9">{{ uc_payment_method }}</label>
+          </p>
+        {% endif %}
+        <p>
+          <label class="col-lg-3">{{ text_transaction_id }}</label>
+          <label class="control-label col-lg-9">{{ transaction_id }}</label>
+        </p>
+      </div>
+    </div>
+  {% else %}
+    <div id="paymentInfoSale" class="well col-xs-12">
+      <h4>
+        <b>{{ text_settlement_details }}</b>
+      </h4>
+      <div class="form-group">
+        {% if uc_payment_method %}
+          <p>
+            <label class="col-lg-3">{{ text_payment_method }}</label>
+            <label class="control-label col-lg-9">{{ uc_payment_method }}</label>
+          </p>
+        {% endif %}
+        <p>
+          <label class="col-lg-3">{{ text_transaction_id }}</label>
+          <label class="control-label col-lg-9">{{ transaction_id }}</label>
+        </p>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if capture_status == 'Enable' %}
+    <div class="well col-xs-12">
+      <h4>
+        <b>{{ text_capture_details }}</b>
+      </h4>
+      <div class="form-group">
+        <p>
+          <label class="col-lg-3">{{ text_transaction_id_s }}</label>
+          <label class="control-label col-lg-9">
+            {% for capture_id in capture %}
+              {{ capture_id.transaction_id }}
+              {% if loop.index < capture_size %}
+                ,
+              {% endif %}
+            {% endfor %}
+          </label>
+        </p>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if auth_reversal_status == 'Enable' %}
+    <div class="well col-xs-12">
+      <h4>
+        <b>{{ text_auth_reversal_details }}</b>
+      </h4>
+      <div class="form-group">
+        <p>
+          <label class="col-lg-3">{{ text_transaction_id }}</label>
+          <label class="control-label col-lg-9">
+            {% for auth_reversal_id in auth_reversal %}
+              {{ auth_reversal_id.transaction_id }}
+              {% if loop.index < auth_reversal_size %}
+                ,
+              {% endif %}
+            {% endfor %}
+          </label>
+        </p>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if void_capture_status == 'Enable' %}
+    <div class="well col-xs-12">
+      <h4>
+        <b>{{ text_void_capture_details }}</b>
+      </h4>
+      <div class="form-group">
+        <p>
+          <label class="col-lg-3">{{ text_transaction_id_s }}</label>
+          <label class="control-label col-lg-9">
+            {% for void_capture_id in void_capture %}
+              {{ void_capture_id.transaction_id }}
+              {% if loop.index < void_capture_size %}
+                ,
+              {% endif %}
+            {% endfor %}
+          </label>
+        </p>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if refund_status == 'Enable' %}
+    <div class="well col-xs-12">
+      <h4>
+        <b>{{ text_refund_details }}</b>
+      </h4>
+      <div class="form-group">
+        <p>
+          <label class="col-lg-3">{{ text_transaction_id_s }}</label>
+          <label class="control-label col-lg-9">
+            {% for refund_id in refund %}
+              {{ refund_id.transaction_id }}
+              {% if loop.index < refund_size %}
+                ,
+              {% endif %}
+            {% endfor %}
+          </label>
+        </p>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if void_refund_status == 'Enable' %}
+    <div class="well col-xs-12">
+      <h4>
+        <b>{{ text_void_refund_details }}</b>
+      </h4>
+      <div class="form-group">
+        <p>
+          <label class="col-lg-3">{{ text_transaction_id_s }}</label>
+          <label class="control-label col-lg-9">
+            {% for void_refund_id in void_refund %}
+              {{ void_refund_id.transaction_id }}
+              {% if loop.index < void_refund_size %}
+                ,
+              {% endif %}
+            {% endfor %}
+          </label>
+        </p>
+      </div>
+    </div>
+  {% endif %}
+{% endif %}

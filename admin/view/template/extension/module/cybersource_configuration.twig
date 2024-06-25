@@ -1,0 +1,699 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="pull-right">
+        <button type="submit" form="form-module" data-toggle="tooltip" title="{{ text_button_save }}" class="btn btn-primary"><i class="fa fa-save"></i></button>
+        <a href="{{ cancel }}" data-toggle="tooltip" title="{{ text_button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a>
+      </div>
+      <h1>
+        {{ heading_title }} {{ extension_version }}
+      </h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="container-fluid">
+    {% if error_warning %}
+      <div class="alert alert-{{ error_warning_type }} alert-dismissible">
+        <i class="fa fa-exclamation-circle"></i>
+        {{ error_warning }}
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+      </div>
+    {% endif %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          <i class="fa fa-pencil"></i>
+          {{ text_edit }}
+        </h3>
+      </div>
+      <div class="panel-body">
+        <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-module" class="form-horizontal">
+          <ul class="nav nav-tabs">
+            <li class="active"><a href="#tab-general" data-toggle="tab">{{ tab_general }}</a></li>
+            <li><a href="#tab-report" data-toggle="tab">{{ tab_report }}</a></li>
+            <li><a href="#tab-status" data-toggle="tab">{{ tab_status }}</a></li>
+          </ul>
+          <div class="tab-content">
+            {# General Settings #}
+            <div class="tab-pane active" id="tab-general">
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input_sandbox">{{ entry_sandbox }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_sandbox" id="input_sandbox" class="form-control">
+                    {% if module_sandbox == 'test' %}
+                      <option value="test" selected="selected">
+                        {{ text_enabled }}
+                      </option>
+                    {% else %}
+                      <option value="test">
+                        {{ text_enabled }}
+                      </option>
+                    {% endif %}
+                    {% if module_sandbox == 'live' %}
+                      <option value="live" selected="selected">
+                        {{ text_disabled }}
+                      </option>
+                    {% else %}
+                      <option value="live">
+                        {{ text_disabled }}
+                      </option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              {# Test #}
+              <div id="testBlock" class="test margin-top">
+                <div class="form-group required">
+                  <label class="col-sm-2 control-label" for="entry-merchant-id-test"><span data-toggle="tooltip" title="{{ help_merchant_id }}">{{ entry_merchant_id }}</span></label>
+                  <div class="col-sm-10">
+                    <input type="text" name="module_{{ payment_gateway }}_merchant_id_test" value="{{ module_merchant_id_test }}" placeholder="{{ entry_merchant_id }}" id="entry-merchant-id-test" class="form-control" />
+                    {% if error_merchant_id %}
+                      <div class="text-danger">
+                        {{ error_merchant_id }}
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="form-group required">
+                  <label class="col-sm-2 control-label" for="entry-merchant-key-id-test"><span data-toggle="tooltip" title="{{ help_merchant_key_id }}">{{ entry_merchant_key_id }}</span></label>
+                  <div class="col-sm-10">
+                    <div class="input-group">
+                      <input data-toggle-password type="password" name="module_{{ payment_gateway }}_merchant_key_id_test" value="{{ module_merchant_key_id_test }}" placeholder="{{ entry_merchant_key_id }}" id="entry-merchant-key-id-test" class="form-control" />
+                      <div class="input-group-addon btn btn-default eye-icon-style toggle-password">
+                        <i class="fa fa-eye-slash"></i>
+                      </div>
+                    </div>
+                    {% if error_merchant_key_id %}
+                      <div class="text-danger">
+                        {{ error_merchant_key_id }}
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="form-group required">
+                  <label class="col-sm-2 control-label" for="entry-merchant-secret-key-test"><span data-toggle="tooltip" title="{{ help_merchant_secret_key }}">{{ entry_merchant_secret_key }}</span></label>
+                  <div class="col-sm-10">
+                    <div class="input-group">
+                      <input data-toggle-password type="password" name="module_{{ payment_gateway }}_merchant_secret_key_test" value="{{ module_merchant_secret_key_test }}" placeholder="{{ entry_merchant_secret_key }}" id="entry-merchant-secret-key-test" class="form-control" />
+                      <div class="input-group-addon btn btn-default eye-icon-style toggle-password">
+                        <i class="fa fa-eye-slash"></i>
+                      </div>
+                    </div>
+                    {% if error_merchant_secret_key %}
+                      <div class="text-danger">
+                        {{ error_merchant_secret_key }}
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              {# Live #}
+              <div id="liveBlock" class="live margin-top">
+                <div class="form-group required">
+                  <label class="col-sm-2 control-label" for="entry-merchant-id-live"><span data-toggle="tooltip" title="{{ help_merchant_id }}">{{ entry_merchant_id }}</span></label>
+                  <div class="col-sm-10">
+                    <input type="text" name="module_{{ payment_gateway }}_merchant_id_live" value="{{ module_merchant_id_live }}" placeholder="{{ entry_merchant_id }}" id="entry-merchant-id-live" class="form-control" />
+                    {% if error_merchant_id %}
+                      <div class="text-danger">
+                        {{ error_merchant_id }}
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="form-group required">
+                  <label class="col-sm-2 control-label" for="entry-merchant-key-id-live"><span data-toggle="tooltip" title="{{ help_merchant_key_id }}">{{ entry_merchant_key_id }}</span></label>
+                  <div class="col-sm-10">
+                    <div class="input-group">
+                      <input data-toggle-password type="password" name="module_{{ payment_gateway }}_merchant_key_id_live" value="{{ module_merchant_key_id_live }}" placeholder="{{ entry_merchant_key_id }}" id="entry-merchant-key-id-live" class="form-control" />
+                      <div class="input-group-addon btn btn-default eye-icon-style toggle-password">
+                        <i class="fa fa-eye-slash"></i>
+                      </div>
+                    </div>
+                    {% if error_merchant_key_id %}
+                      <div class="text-danger">
+                        {{ error_merchant_key_id }}
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="form-group required">
+                  <label class="col-sm-2 control-label" for="entry-merchant-secret-key-live"><span data-toggle="tooltip" title="{{ help_merchant_secret_key }}">{{ entry_merchant_secret_key }}</span></label>
+                  <div class="col-sm-10">
+                    <div class="input-group">
+                      <input data-toggle-password type="password" name="module_{{ payment_gateway }}_merchant_secret_key_live" value="{{ module_merchant_secret_key_live }}" placeholder="{{ entry_merchant_secret_key }}" id="entry-merchant-secret-key-live" class="form-control" />
+                      <div class="input-group-addon btn btn-default eye-icon-style toggle-password">
+                        <i class="fa fa-eye-slash"></i>
+                      </div>
+                    </div>
+                    {% if error_merchant_secret_key %}
+                      <div class="text-danger">
+                        {{ error_merchant_secret_key }}
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              <div class="form-group margin-top">
+                <label class="col-sm-2 control-label" for="input-fraud-status">{{ entry_fraud_status }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_fraud_status" id="input-fraud-status" class="form-control">
+                    {% if module_fraud_status %}
+                      <option value="1" selected="selected">
+                        {{ text_enabled }}
+                      </option>
+                      <option value="0">
+                        {{ text_disabled }}
+                      </option>
+                    {% else %}
+                      <option value="1">
+                        {{ text_enabled }}
+                      </option>
+                      <option value="0" selected="selected">
+                        {{ text_disabled }}
+                      </option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-dav-status">{{ entry_dav_status }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_dav_status" id="input-dav-status" class="form-control">
+                    {% if module_dav_status %}
+                      <option value="1" selected="selected">
+                        {{ text_enabled }}
+                      </option>
+                      <option value="0">
+                        {{ text_disabled }}
+                      </option>
+                    {% else %}
+                      <option value="1">
+                        {{ text_enabled }}
+                      </option>
+                      <option value="0" selected="selected">
+                        {{ text_disabled }}
+                      </option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-dfp">{{ entry_dfp }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_dfp" id="input-dfp" class="form-control">
+                    {% if module_dfp %}
+                      <option value="1" selected="selected">
+                        {{ text_enabled }}
+                      </option>
+                      <option value="0">
+                        {{ text_disabled }}
+                      </option>
+                    {% else %}
+                      <option value="1">
+                        {{ text_enabled }}
+                      </option>
+                      <option value="0" selected="selected">
+                        {{ text_disabled }}
+                      </option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-developer-id"><span data-toggle="tooltip" title="{{ help_developer_id }}">{{ entry_developer_id }}</span></label>
+                <div class="col-sm-10">
+                  <input type="text" name="module_{{ payment_gateway }}_developer_id" value="{{ module_developer_id }}" placeholder="{{ entry_developer_id }}" id="input-developer-id" class="form-control" />
+                  {% if error_developer_id %}
+                    <div class="text-danger">
+                      {{ error_developer_id }}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-status">{{ entry_status }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_configuration_status" id="input-status" class="form-control">
+                    {% if module_configuration_status %}
+                      <option value="1" selected="selected">
+                        {{ text_enabled }}
+                      </option>
+                      <option value="0">
+                        {{ text_disabled }}
+                      </option>
+                    {% else %}
+                      <option value="1">
+                        {{ text_enabled }}
+                      </option>
+                      <option value="0" selected="selected">
+                        {{ text_disabled }}
+                      </option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input_transaction_method">{{ entry_transaction_method }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_transaction_method" id="input_transaction_method" class="form-control">
+                    {% if module_transaction_method == 'sale' %}
+                      <option value="authorize">
+                        {{ text_authorization }}
+                      </option>
+                      <option value="sale" selected="selected">
+                        {{ text_sale }}
+                      </option>
+                    {% else %}
+                      <option value="authorize" selected="selected">
+                        {{ text_authorization }}
+                      </option>
+                      <option value="sale">
+                        {{ text_sale }}
+                      </option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-recaptcha-status">{{ entry_recaptcha_status }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_recaptcha_status" id="input-recaptcha-status" class="form-control">
+                    {% if module_recaptcha_status %}
+                      <option value="1" selected="selected">
+                        {{ text_enabled }}
+                      </option>
+                      <option value="0">
+                        {{ text_disabled }}
+                      </option>
+                    {% else %}
+                      <option value="1">
+                        {{ text_enabled }}
+                      </option>
+                      <option value="0" selected="selected">
+                        {{ text_disabled }}
+                      </option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              <div id="recaptcha" class="margin-top">
+                <div class="form-group required">
+                  <label class="col-sm-2 control-label" for="input-site-key"><span data-toggle="tooltip" title="{{ help_site_key }}">{{ entry_site_key }}</span></label>
+                  <div class="col-sm-10">
+                    <div class="input-group">
+                      <input data-toggle-password type="password" name="module_{{ payment_gateway }}_recaptcha_site_key" id="input-site-key" value="{{ module_recaptcha_site_key }}" placeholder="{{ entry_site_key }}" class="form-control" />
+                      <div class="input-group-addon btn btn-default eye-icon-style toggle-password">
+                        <i class="fa fa-eye-slash"></i>
+                      </div>
+                    </div>
+                    {% if error_site_key %}
+                      <span class="help-block text-danger">{{ error_site_key }}</span>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="form-group required">
+                  <label class="col-sm-2 control-label" for="input-secret-key"><span data-toggle="tooltip" title="{{ help_secret_key }}">{{ entry_secret_key }}</span></label>
+                  <div class="col-sm-10">
+                    <div class="input-group">
+                      <input data-toggle-password type="password" name="module_{{ payment_gateway }}_recaptcha_secret_key" id="input-secret-key" value="{{ module_recaptcha_secret_key }}" placeholder="{{ entry_secret_key }}" class="form-control" />
+                      <div class="input-group-addon btn btn-default eye-icon-style toggle-password">
+                        <i class="fa fa-eye-slash"></i>
+                      </div>
+                    </div>
+                    {% if error_secret_key %}
+                      <span class="text-danger">{{ error_secret_key }}</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-recaptcha-logs">{{ entry_enhanced_logs }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_enhanced_logs" id="input-recaptcha-logs" class="form-control">
+                    {% if module_enhanced_logs %}
+                      <option value="1" selected="selected">
+                        {{ text_enabled }}
+                      </option>
+                      <option value="0">
+                        {{ text_disabled }}
+                      </option>
+                    {% else %}
+                      <option value="1">
+                        {{ text_enabled }}
+                      </option>
+                      <option value="0" selected="selected">
+                        {{ text_disabled }}
+                      </option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+            </div>
+            {# Report Configuration #}
+            <div class="tab-pane" id="tab-report">
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-payment-batch-detail-report"><span data-toggle="tooltip" title="{{ help_pbd_guide }}">{{ entry_payment_batch_detail_report }}</span></label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_payment_batch_detail_report" id="input-payment-batch-detail-report" class="form-control">
+                    {% if module_payment_batch_detail_report %}
+                      <option value="1" selected="selected">
+                        {{ text_enabled }}
+                      </option>
+                      <option value="0">
+                        {{ text_disabled }}
+                      </option>
+                    {% else %}
+                      <option value="1">
+                        {{ text_enabled }}
+                      </option>
+                      <option value="0" selected="selected">
+                        {{ text_disabled }}
+                      </option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              <div id="pbr-path">
+                <div class="form-group" id="pbr-test">
+                  <label class="col-sm-2 control-label" for="input-payment-batch-detail-report-path-test"><span data-toggle="tooltip" title="{{ entry_relative_path_test }}">{{ text_download_path }}</span></label>
+                  <div class="col-sm-10">
+                    <input type="text" name="module_{{ payment_gateway }}_payment_batch_detail_report_path_test" value="{{ module_payment_batch_detail_report_path_test }}" placeholder="{{ text_ex_foldername }}" id="input-payment-batch-detail-report-path-test" class="form-control" />
+                    {% if error_invalid_folder_pbr_path %}
+                      <div class="text-danger">
+                        {{ error_invalid_folder_pbr_path }}
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="form-group" id="pbr-live">
+                  <label class="col-sm-2 control-label" for="input-payment-batch-detail-report-path-live"><span data-toggle="tooltip" title="{{ entry_relative_path_live }}">{{ text_download_path }}</span></label>
+                  <div class="col-sm-10">
+                    <input type="text" name="module_{{ payment_gateway }}_payment_batch_detail_report_path_live" value="{{ module_payment_batch_detail_report_path_live }}" placeholder="{{ text_ex_foldername }}" id="input-payment-batch-detail-report-path-live" class="form-control" />
+                    {% if error_invalid_folder_pbr_path %}
+                      <div class="text-danger">
+                        {{ error_invalid_folder_pbr_path }}
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-transaction-request-report"><span data-toggle="tooltip" title="{{ help_report_guide }}">{{ entry_transaction_request_report }}</span></label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_transaction_request_report" id="input-transaction-request-report" class="form-control">
+                    {% if module_transaction_request_report %}
+                      <option value="1" selected="selected">
+                        {{ text_enabled }}
+                      </option>
+                      <option value="0">
+                        {{ text_disabled }}
+                      </option>
+                    {% else %}
+                      <option value="1">
+                        {{ text_enabled }}
+                      </option>
+                      <option value="0" selected="selected">
+                        {{ text_disabled }}
+                      </option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              <div id="trr-path">
+                <div class="form-group" id="trr-test">
+                  <label class="col-sm-2 control-label" for="input-transaction-request-report-path-test"><span data-toggle="tooltip" title="{{ entry_relative_path_test }}">{{ text_download_path }}</span></label>
+                  <div class="col-sm-10">
+                    <input type="text" name="module_{{ payment_gateway }}_transaction_request_report_path_test" value="{{ module_transaction_request_report_path_test }}" placeholder="{{ text_ex_foldername }}" id="input-transaction-request-report-path-test" class="form-control" />
+                    {% if error_invalid_folder_trr_path %}
+                      <div class="text-danger">
+                        {{ error_invalid_folder_trr_path }}
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="form-group" id="trr-live">
+                  <label class="col-sm-2 control-label" for="input-transaction-request-report-path-live"><span data-toggle="tooltip" title="{{ entry_relative_path_live }}">{{ text_download_path }}</span></label>
+                  <div class="col-sm-10">
+                    <input type="text" name="module_{{ payment_gateway }}_transaction_request_report_path_live" value="{{ module_transaction_request_report_path_live }}" placeholder="{{ text_ex_foldername }}" id="input-transaction-request-report-path-live" class="form-control" />
+                    {% if error_invalid_folder_trr_path %}
+                      <div class="text-danger">
+                        {{ error_invalid_folder_trr_path }}
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-conversion-detail-report"><span data-toggle="tooltip" title="{{ help_cdr_guide }}">{{ entry_conversion_detail_report }}</span></label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_conversion_detail_report" id="input-conversion-detail-report" class="form-control">
+                    {% if module_conversion_detail_report %}
+                      <option value="1" selected="selected">
+                        {{ text_enabled }}
+                      </option>
+                      <option value="0">
+                        {{ text_disabled }}
+                      </option>
+                    {% else %}
+                      <option value="1">
+                        {{ text_enabled }}
+                      </option>
+                      <option value="0" selected="selected">
+                        {{ text_disabled }}
+                      </option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+            </div>
+            {# Order Status #}
+            <div class="tab-pane" id="tab-status">
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-auth-status">{{ entry_auth_status }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_auth_status_id" id="input-auth-status" class="form-control"></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-partial-capture-status">{{ entry_partial_capture_status }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_partial_capture_status_id" id="input-partial-capture-status" class="form-control"></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-capture-status">{{ entry_capture_status }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_capture_status_id" id="input-capture-status" class="form-control"></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-partial-refund-status">{{ entry_partial_refund_status }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_partial_refund_status_id" id="input-partial-refund-status" class="form-control"></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-refund-status">{{ entry_refund_status }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_refund_status_id" id="input-refund-status" class="form-control"></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-fraud-management-status">{{ entry_fraud_management_status }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_fraud_management_status_id" id="input-fraud-management-status" class="form-control"></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-fraud-reject-status">{{ entry_fraud_reject_status }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_fraud_reject_status_id" id="input-fraud-reject-status" class="form-control"></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-auth-reversal-status">{{ entry_auth_reversal_status }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_auth_reversal_status_id" id="input-auth-reversal-status" class="form-control"></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-partial-void-status">{{ entry_partial_void_status }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_partial_void_status_id" id="input-partial-void-status" class="form-control"></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-void-status">{{ entry_void_status }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_void_status_id" id="input-void-status" class="form-control"></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-payment-error-status">{{ entry_payment_error_status }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_payment_error_status_id" id="input-payment-error-status" class="form-control"></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-refund-error-status">{{ entry_refund_error_status }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_refund_error_status_id" id="input-refund-error-status" class="form-control"></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-auth-reversal-error-status">{{ entry_auth_reversal_error_status }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_auth_reversal_error_status_id" id="input-auth-reversal-error-status" class="form-control"></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-void-error-status">{{ entry_void_error_status }}</label>
+                <div class="col-sm-10">
+                  <select name="module_{{ payment_gateway }}_void_error_status_id" id="input-void-error-status" class="form-control"></select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{{ footer }}
+
+<script>
+	if (window.history.replaceState) {
+		window.history.replaceState(null, null, window.location.href);
+	}
+
+	document.addEventListener('DOMContentLoaded', () => {
+		dropDown("input-auth-status", "{{module_auth_status_id}}", "{{text_pending_status}}");
+		dropDown("input-partial-capture-status", "{{module_partial_capture_status_id}}", "{{text_processing_status}}");
+		dropDown("input-capture-status", "{{module_capture_status_id}}", "{{text_processed_status}}");
+		dropDown("input-partial-refund-status", "{{module_partial_refund_status_id}}", "{{text_partial_refunded_status}}");
+		dropDown("input-refund-status", "{{module_refund_status_id}}", "{{text_refunded_status}}");
+		dropDown("input-fraud-management-status", "{{module_fraud_management_status_id}}", "{{text_fraud_review_status}}");
+		dropDown("input-fraud-reject-status", "{{module_fraud_reject_status_id}}", "{{text_fraud_reject_status}}");
+		dropDown("input-auth-reversal-status", "{{module_auth_reversal_status_id}}", "{{text_canceled_status}}");
+		dropDown("input-partial-void-status", "{{module_partial_void_status_id}}", "{{text_partial_voided_status}}");
+		dropDown("input-void-status", "{{module_void_status_id}}", "{{text_voided_status}}");
+		dropDown("input-payment-error-status", "{{module_payment_error_status_id}}", "{{error_payment}}");
+		dropDown("input-refund-error-status", "{{module_refund_error_status_id}}", "{{error_refund}}");
+		dropDown("input-auth-reversal-error-status", "{{module_auth_reversal_error_status_id}}", "{{error_cancel}}");
+		dropDown("input-void-error-status", "{{module_void_error_status_id}}", "{{error_void}}");
+	});
+
+	function dropDown(id, status_id, status_name) {
+		let order_statuses = JSON.parse('{{order_statuses | json_encode}}');
+		let tag_id = '#' + id;
+		order_statuses.forEach(order_status => {
+			if (order_status.order_status_id == status_id) {
+				$(tag_id).append('<option value="' + order_status.order_status_id + '" selected="selected" >' + order_status.name + '</option>');
+			} else if (order_status.name == status_name) {
+				$(tag_id).append('<option value="' + order_status.order_status_id + '" selected="selected" >' + order_status.name + '</option>');
+			} else {
+				$(tag_id).append('<option value="' + order_status.order_status_id + '">' + order_status.name + '</option>');
+			}
+		});
+	}
+
+	$(document).on('click', '.toggle-password', function(e) {
+		let target = $(this).closest('.form-group').find('input[data-toggle-password]');
+		if ($(target).attr('type') == 'password') {
+			$(target).attr('type', 'text');
+			$(this).find('.fa-eye-slash').removeClass('fa-eye-slash').addClass('fa-eye');
+		} else {
+			$(target).attr('type', 'password');
+			$(this).find('.fa-eye').removeClass('fa-eye').addClass('fa-eye-slash');
+		}
+	});
+	$("select[name='module_{{payment_gateway}}_recaptcha_status'").change(function() {
+		$(this).find("option:selected").each(function() {
+			var optionValue = $(this).attr("value");
+			if (optionValue == "1") {
+				$("#recaptcha").show();
+			} else {
+				$("#recaptcha").hide();
+			}
+		});
+	}).change();
+	$(document).ready(function() {
+		$("select[name='module_{{payment_gateway}}_sandbox'").change(function() {
+			$(this).find("option:selected").each(function() {
+				var optionValue = $(this).attr("value");
+				if (optionValue == "test") {
+					$("#testBlock").removeClass('hide-block').addClass('show-block');
+					$("#liveBlock").removeClass('show-block').addClass('hide-block');
+					$("#trr-test").removeClass('hide-block').addClass('show-block');
+					$("#trr-live").removeClass('show-block').addClass('hide-block');
+					$("#pbr-test").removeClass('hide-block').addClass('show-block');
+					$("#pbr-live").removeClass('show-block').addClass('hide-block');
+				} else if (optionValue == "live") {
+					$("#testBlock").removeClass('show-block').addClass('hide-block');
+					$("#liveBlock").removeClass('hide-block').addClass('show-block');
+					$("#trr-test").removeClass('show-block').addClass('hide-block');
+					$("#trr-live").removeClass('hide-block').addClass('show-block');
+					$("#pbr-test").removeClass('show-block').addClass('hide-block');
+					$("#pbr-live").removeClass('hide-block').addClass('show-block');
+				}
+			});
+		}).change();
+		$("select[name='module_{{payment_gateway}}_payment_batch_detail_report'").change(function() {
+			$(this).find("option:selected").each(function() {
+				var optionValue = $(this).attr("value");
+				if (optionValue == "1") {
+					$("#pbr-path").show();
+				} else {
+					$("#pbr-path").hide();
+				}
+			});
+		}).change();
+		$("select[name='module_{{payment_gateway}}_transaction_request_report'").change(function() {
+			$(this).find("option:selected").each(function() {
+				var optionValue = $(this).attr("value");
+				if (optionValue == "1") {
+					$("#trr-path").show();
+				} else {
+					$("#trr-path").hide();
+				}
+			});
+		}).change();
+		var environment_type = $('#input_sandbox').val();
+		if (environment_type == "test") {
+			$("#trr-test").removeClass('hide-block').addClass('show-block');
+			$("#trr-live").removeClass('show-block').addClass('hide-block');
+			$("#pbr-test").removeClass('hide-block').addClass('show-block');
+			$("#pbr-live").removeClass('show-block').addClass('hide-block');
+		} else if (environment_type == "live") {
+			$("#trr-test").removeClass('show-block').addClass('hide-block');
+			$("#trr-live").removeClass('hide-block').addClass('show-block');
+			$("#pbr-test").removeClass('show-block').addClass('hide-block');
+			$("#pbr-live").removeClass('hide-block').addClass('show-block');
+		}
+	});
+
+</script>
+
+<style>
+	.show-block {
+		display: block;
+	}
+
+	.hide-block {
+		display: none;
+	}
+
+	.eye-icon-style {
+		background-color: white;
+	}
+
+	.margin-top {
+		border-top: 1px solid #ededed;
+	}
+
+</style>

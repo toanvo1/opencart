@@ -1,0 +1,425 @@
+<div id="dav-block">
+  {% if not address_match %}
+    <h3>
+      {{ text_delivery_address }}
+    </h3>
+    {% if error_address %}
+      <div class="alert alert-danger alert-dismissible">
+        {{ text_warning }}
+        {{ error_address }}
+      </div>
+      <div class="buttons">
+        <div class="pull-right">
+          <input type="button" value="{{ button_continue_address }}" id="button-continue-address" data-loading-text="{{ text_loading }}" class="btn btn-primary button-spacing" onclick="buttonContinueAddressApay()" />
+          <input type="button" value="{{ button_edit_address }}" id="button-edit-address" data-loading-text="{{ text_loading }}" class="btn btn-primary button-spacing" onclick="buttonEditAddress()" />
+        </div>
+      </div>
+    {% else %}
+      <div class="row">
+        <div class="col-sm-4 address-border">
+          <div class="radio">
+            <label>
+              <span><input type="radio" value="recommended_address" name="address" id="recommended-address" checked="checked" /></span>
+              <span class="h4">{{ text_recommended_address }}</span>
+            </label>
+          </div>
+          <address class="address-block">
+            {{ recommended_address_format.address }}
+          </address>
+        </div>
+        <div class="col-sm-4 address-border">
+          <div class="radio">
+            <label>
+              <span><input type="radio" value="entered_address" name="address" id="entered-address" /></span>
+              <span class="h4">{{ text_address_you_entered }}</span>
+            </label>
+          </div>
+          <address class="address-block">
+            {{ entered_address_format.address }}
+          </address>
+        </div>
+      </div>
+      <div class="buttons">
+        <div class="pull-right">
+          <input type="button" value="{{ button_continue_address }}" id="button-selected-address" data-loading-text="{{ text_loading }}" class="btn btn-primary" onclick="buttonSelectedAddressApay()" />
+        </div>
+      </div>
+    {% endif %}
+  {% endif %}
+</div>
+
+<div id="apay" class="display-none">
+  <div>
+    <h4 class="h4">
+      {{ method_name }}
+    </h4>
+  </div>
+  <div id="applePayNonSupport" class="display-none">
+    <div class="alert alert-danger alert-dismissible">
+      {{ text_warning }}
+      {{ error_browser }}
+    </div>
+  </div>
+  <div id="applePayNonActivate" class="display-none">
+    <div class="alert alert-danger alert-dismissible">
+      {{ text_warning }}
+      {{ error_not_activated }}
+    </div>
+  </div>
+  <div id="applePayButton" class="display-none">
+    <apple-pay-button type="buy" onclick="onSubmit()" locale="{{ language_code }}"></apple-pay-button>
+  </div>
+</div>
+
+<div id="modal-timeout" class="modal fade" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">
+          {{ text_error }}
+        </h4>
+      </div>
+      <div class="modal-body"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+	.address-border {
+		border: 1px solid #ddd;
+		margin: 5px 14px;
+		padding: 10px;
+	}
+
+	.button-spacing {
+		margin: 3px;
+	}
+
+	.modal {
+		z-index: 100000 !important;
+	}
+
+	.address-block {
+		min-height: 9rem;
+		padding-left: 20px;
+	}
+
+	.display-none {
+		display: none;
+	}
+
+	apple-pay-button {
+		--apple-pay-button-width: 140px;
+		--apple-pay-button-height: 30px;
+		--apple-pay-button-border-radius: 5px;
+		--apple-pay-button-padding: 5px 0px;
+	}
+
+</style>
+
+<script type="text/javascript">
+	var time_out_in_ms = 180000;
+	var dav_address = 0;
+	let recommended_address = [];
+	var shipping_address, shipping_city, shipping_state, shipping_country, shipping_postal;
+	$(document).ready(function() {
+		checkForAddressMatch();
+	});
+
+	function checkApplePaySession() {
+		if (window.ApplePaySession) {
+			if (window.ApplePaySession.canMakePayments()) {
+				document.getElementById("applePayButton").style.display = "block";
+			} else {
+				document.getElementById("applePayNonActivate").style.display = "block";
+			}
+		} else {
+			document.getElementById("applePayNonSupport").style.display = "block";
+		}	
+	}
+
+	function onSubmit() {
+		var payment_request = {
+			countryCode: "{{country_code}}",
+			currencyCode: "{{currency_code}}",
+			total: {
+				label: "{{store_name}}",
+				amount: "{{total}}",
+			},
+			supportedNetworks: ['amex', 'masterCard', 'visa', 'discover'],
+			merchantCapabilities: ['supports3DS', 'supportsEMV', 'supportsCredit', 'supportsDebit']
+		};
+
+		var session = new ApplePaySession(1, payment_request);
+
+		session.begin();
+
+		session.onvalidatemerchant = function(event) {
+			checkRecaptcha(event.validationURL);
+		}
+
+		function checkRecaptcha(validation_url) {
+			if (Number('{{recaptcha_enabled}}')) {
+				setRecaptcha(validation_url);
+			} else {
+				sendPaymentToken('NOTOKEN', validation_url);
+			}
+		}
+
+		function setRecaptcha(validation_url) {
+			try {
+				grecaptcha.ready(function() {
+					try {
+						grecaptcha.execute('{{recaptcha_site_key}}', {
+							action: 'submit'
+						}).then(function(token) {
+							sendPaymentToken(token, validation_url);
+						});
+					} catch (err) {
+						session.abort();
+						showPopMsg('{{error_recaptcha_load_failed}}');
+					}
+				});
+			} catch (err) {
+				session.abort();
+				showPopMsg('{{error_recaptcha_load_failed}}');
+			}
+		}
+
+		function sendPaymentToken(token, validation_url) {
+			var csrf = "{{ csrf_token_data }}";
+			var time = "{{ time_data }}";
+			try {
+				$.ajax({
+					type: 'POST',
+					url: 'index.php?route=extension/payment/cybersource_apay/confirmPaymentRecaptcha',
+					dataType: 'json',
+					cache: false,
+					data: {
+						csrf: csrf,
+						time: time,
+						token: token,
+					},
+					success: function(response) {
+						if (response.redirect) {
+							session.abort();
+							location = response.redirect;
+						} else {
+							if (response.error) {
+								session.abort();
+								showPopMsg(response.error_warning);
+							} else {
+								performValidation(response.success, validation_url);
+							}
+						}
+						setTimeout(function() {
+							session.abort();
+							showPopMsg('{{error_session}}');
+						}, time_out_in_ms);
+
+					},
+					error: function(xhr, ajaxOptions, thrownError) {
+						console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+						session.abort();
+						showPopMsg('{{error_failure}}');
+					}
+				});
+			} catch (exception) {
+				session.abort();
+				showPopMsg('{{error_exception}}');
+			}
+		}
+
+		function performValidation(url, validation_url) {
+			try {
+				$.ajax({
+					url: url,
+					type: 'POST',
+					cache: false,
+					dataType: 'json',
+					data: {
+						validation_url: validation_url,
+					},
+					success: function(response) {
+						if (!response) {
+							session.abort();
+							showPopMsg('{{error_dav_request}}');
+						} else {
+							session.completeMerchantValidation(JSON.parse(response));
+						}
+					},
+					error: function(xhr, ajaxOptions, thrownError) {
+						console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+						session.abort();
+						showPopMsg('{{error_failure}}');
+					}
+				});
+			} catch (exception) {
+				session.abort();
+				showPopMsg('{{error_exception}}');
+			}
+		}
+
+		session.onpaymentauthorized = function(event) {
+			var payment_data_string = JSON.stringify(event.payment.token.paymentData);
+			var payment_data_base64 = btoa(payment_data_string);
+			invokeServiceAfterRecaptcha(payment_data_base64);
+		}
+
+		function invokeServiceAfterRecaptcha(payment_data) {
+			var csrf = "{{ csrf_token_data }}";
+			var time = "{{ time_data }}";
+			try {
+				$.ajax({
+					type: 'POST',
+					url: 'index.php?route=extension/payment/cybersource_apay/confirm',
+					dataType: 'json',
+					data: {
+						payment_data: payment_data,
+						dav_address,
+						shipping_address,
+						shipping_city,
+						shipping_state,
+						shipping_country,
+						shipping_postal,
+						csrf: csrf,
+						time: time,
+					},
+					success: function(json) {
+						if (json.redirect) {
+							var page_name = (json.redirect).split("/").pop();
+							if (page_name == "checkout") {
+								status = ApplePaySession.STATUS_FAILURE;
+								session.completePayment(status);
+								showPopMsg('{{error_session}}');
+							} else {
+								var response = (json.redirect).split("/").pop();
+								if (response == 'success') {
+									status = ApplePaySession.STATUS_SUCCESS;
+								} else {
+									status = ApplePaySession.STATUS_FAILURE;
+								}
+								session.completePayment(status);
+								window.location.href = json.redirect;
+							}
+						}
+						setTimeout(function() {
+							status = ApplePaySession.STATUS_FAILURE;
+							session.completePayment(status);
+							showPopMsg('{{error_session}}');
+						}, time_out_in_ms);
+					},
+					error: function(xhr, ajaxOptions, thrownError) {
+						console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+						var http_url = ((xhr.responseText).split('"redirect":').pop()).slice(1, -2);
+						http_url = http_url.replaceAll("\\", '');
+						if (http_url.startsWith('http')) {
+							var url = (http_url).split("/").pop();
+							if (url == 'success' || url == 'failure') {
+								status = (url == 'success') ? ApplePaySession.STATUS_SUCCESS : ApplePaySession.STATUS_FAILURE;
+								session.completePayment(status);
+								window.location.href = http_url;
+							} else {
+								status = ApplePaySession.STATUS_FAILURE;
+								session.completePayment(status);
+								showPopMsg('{{error_failure}}');
+							}
+						} else {
+							status = ApplePaySession.STATUS_FAILURE;
+							session.completePayment(status);
+							showPopMsg('{{error_failure}}');
+						}
+					}
+				});
+			} catch (exception) {
+				status = ApplePaySession.STATUS_FAILURE;
+				session.completePayment(status);
+				showPopMsg('{{error_exception}}');
+			}
+		}
+
+		session.oncancel = function(event) {
+			session.abort();
+		}
+	}
+
+	function checkForAddressMatch() {
+		var dav_success = "{{ address_match }}";
+		if (dav_success == "1") {
+			if ($('#collapse-checkout-confirm').hasClass('in')) {
+				document.getElementById('apay').style.display = "block";
+				checkApplePaySession();
+			} else {
+				setTimeout(checkForAddressMatch, 500);
+			}
+		}
+	}
+
+	function buttonSelectedAddressApay() {
+		var selectedRadioBtn = document.getElementsByName('address');
+		var address_selected = false;
+		for (i = 0; i < selectedRadioBtn.length; i++) {
+			if (selectedRadioBtn[i].checked) {
+				address_selected = true;
+				if (selectedRadioBtn[i].value == "recommended_address") {
+					dav_address = 1;
+					shipping_address = "{{recommended_address}}";
+					shipping_city = "{{recommended_city}}";
+					shipping_state = "{{recommended_state}}";
+					shipping_country = "{{recommended_country}}";
+					shipping_postal = "{{recommended_postal_code}}";
+					document.getElementById('dav-block').style.display = "none";
+					document.getElementById('apay').style.display = "block";
+				} else {
+					dav_address = 0;
+					document.getElementById('dav-block').style.display = "none";
+					document.getElementById('apay').style.display = "block";
+				}
+			}
+		} if (address_selected) {
+			checkApplePaySession();
+		}
+	}
+
+	function buttonContinueAddressApay() {
+		dav_address = 0;
+		checkApplePaySession();
+		document.getElementById('dav-block').style.display = "none";
+		document.getElementById('apay').style.display = "block";
+	}
+
+	function buttonEditAddress() {
+		$(document).scrollTop(100);
+		$('a[href=\'#collapse-shipping-address\']').trigger('click');
+	}
+
+	function showPopMsg(msg) {
+		$('#modal-timeout').modal('show');
+		$('.alert-dismissible').remove();
+		$('#modal-timeout .modal-body').append(`<div class="alert alert-danger alert-dismissible">	<i class="fa fa-exclamation-circle"></i> ` + msg + ` </div>`);
+	}
+
+	$("#modal-timeout .modal-header > button").click(function() {
+		$("#content *").attr('disabled', true);
+		location.reload();
+	});
+
+</script>
+
+<script src="https://applepay.cdn-apple.com/jsapi/v1/apple-pay-sdk.js"></script>
+
+{% if recaptcha_enabled %}
+
+  <script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
+
+{% endif %}
+
+{% if dfp_url %}
+
+  <script type="text/javascript" src="{{ dfp_url }}"></script>
+
+  <noscript>
+    <iframe class="iframe" src="{{ dfp_url }}"></iframe>
+  </noscript>
+{% endif %}

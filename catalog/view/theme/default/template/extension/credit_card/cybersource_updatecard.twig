@@ -1,0 +1,396 @@
+{{ header }}
+<div class="container">
+  <ul class="breadcrumb">
+    {% for breadcrumb in breadcrumbs %}
+      <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+    {% endfor %}
+  </ul>
+  <h2>
+    {{ text_update_credit_card }}
+  </h2>
+  {#
+        {% if success %}
+                <div class="alert alert-success alert-dismissible">
+                    <i class="fa fa-check-circle"></i>
+                    {{ success }}
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                </div>
+        {% endif %}
+	#}
+  {% if error_card_update %}
+    <div class="alert alert-danger alert-dismissible">
+      <i class="fa fa-exclamation-circle"></i>
+      {{ error_card_update }}
+    </div>
+  {% endif %}
+  <div class="row">
+    {{ column_left }}
+    {% if column_left and column_right %}
+      {% set class = 'col-sm-6' %}
+    {% elseif column_left or column_right %}
+      {% set class = 'col-sm-9' %}
+    {% else %}
+      {% set class = 'col-sm-12' %}
+    {% endif %}
+    <div class="{{ class }}" id="content">
+      {{ content_top }}
+      {% if update_cards %}
+        <div id="error_msg"></div>
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover well table-margin">
+            <thead>
+              <tr>
+                <th class="text-center column-width">
+                  {{ column_card_number }}
+                </th>
+                <th class="text-center column-width">
+                  {{ column_customer_name }}
+                </th>
+                <th class="text-center column-width">
+                  {{ column_expiry_month }}
+                </th>
+                <th class="text-center column-width">
+                  {{ column_expiry_year }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="text-center vertical-align">
+                  {{ update_cards.card_number }}
+                </td>
+                <td class="text-center vertical-align">
+                  {{ update_cards.customer_name }}
+                </td>
+                <td>
+                  <div class="container-fluid">
+                    <div class="row">
+                      <div class="col-sm-4"></div>
+                      <div class="col-sm-4">
+                        <select name="expiration-month" class="form-control form-width" id="expiration-month" value="{{ update_cards.expiry_month }}"></select>
+                      </div>
+                      <div class="col-sm-4"></div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="container-fluid">
+                    <div class="row">
+                      <div class="col-sm-4"></div>
+                      <div class="col-sm-4">
+                        <select name="expiration-year" class="form-control form-width" id="expiration-year" value="{{ update_cards.expiry_year }}"></select>
+                      </div>
+                      <div class="col-sm-4"></div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="4" class="text-center">
+                  {% if update_cards.address %}
+                    <div>
+                      <div class="col-sm-3">
+                        <strong id="address-id" name="address-id" value="{{ update_cards.address_id }}"><b>{{ text_billing_address }}</b></strong>
+                        <div>
+                          {{ update_cards.address }}
+                        </div>
+                      </div>
+                      <div class="col-sm-3">
+                        <div class="buttons">
+                          <input type="button" value="{{ button_change_address }}" id="button-change-address" name="change-address" data-loading-text="{{ text_loading }}" class="btn btn-primary" onclick="showAddressDiv()" />
+                        </div>
+                      </div>
+                    </div>
+                  {% else %}
+                    <h4>
+                      <input type="button" value="{{ text_add_address }}" class="btn btn-primary" onclick="showAddressDiv()" />
+                    </h4>
+                  {% endif %}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="address-div" class="display-none">
+          <div class="panel-group" id="accordion">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h4 class="panel-title">
+                  {{ text_checkout_payment_address }}
+                </h4>
+              </div>
+              <div class="panel-collapse collapse" id="collapse-payment-address">
+                <div class="panel-body"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="buttons">
+          <div class="pull-right">
+            <input type="button" value="{{ button_update_card }}" id="button-update-card" name="{{ update_cards.card_id }}" disabled data-loading-text="{{ text_loading }}" class="btn btn-primary" />
+          </div>
+          <div class="pull-left">
+            <a href="{{ back }}" class="btn btn-default">{{ button_back }}</a>
+          </div>
+        </div>
+      {% endif %}
+      {{ content_bottom }}
+    </div>
+    {{ column_right }}
+  </div>
+
+  <div id="modal-timeout" class="modal fade" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">
+            {{ text_errror }}
+          </h4>
+        </div>
+        <div class="modal-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+	.modal {
+		z-index: 100000 !important;
+	}
+
+	.vertical-align {
+		vertical-align: middle !important;
+	}
+
+	.display-none {
+		display: none;
+	}
+
+	.table-margin {
+		margin-bottom: 5px;
+	}
+
+	.column-width {
+		width: 25%;
+	}
+
+	.form-width {
+		width: auto !important;
+	}
+
+</style>
+
+<script type="text/javascript">
+	function showPopMsg(msg) {
+		$('#modal-timeout').modal('show');
+		$('.alert-dismissible').remove();
+		$('#modal-timeout .modal-body').append(`<div class="alert alert-danger alert-dismissible">	<i class="fa fa-exclamation-circle"></i> ` + msg + ` </div>`);
+	}
+
+	$("#modal-timeout .modal-header > button").click(function() {
+		$("#content *").attr('disabled', true);
+		location.reload();
+	});
+
+	$("#button-update-card").attr("disabled", true);
+
+	$(document).ready(function() {
+		{% if not error_card_update %}
+		$("#expiration-month option[value= {{ update_cards.expiry_month }}]").attr('selected', 'selected');
+		$("#expiration-year option[value= {{ update_cards.expiry_year }}]").attr('selected', 'selected');
+		$.ajax({
+			url: 'index.php?route=checkout/payment_address',
+			dataType: 'html',
+			success: function(html) {
+				$('#collapse-payment-address .panel-body').html(html);
+				$('#collapse-payment-address').parent().find('.panel-heading .panel-title').html('<a href="#collapse-payment-address" data-toggle="collapse" data-parent="#accordion" class="accordion-toggle">{{ text_checkout_payment_address }} <i class="fa fa-caret-down"></i></a>');
+				$('a[href=\'#collapse-payment-address\']').trigger('click');
+			},
+			error: function(xhr, ajaxOptions, thrownError) {
+				console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+				showPopMsg('{{error_failure}}');
+			}
+		});
+		{% endif %}
+	});
+
+	$('#expiration-year').change(function() {
+		let address_id = $('#payment-existing :selected').val();
+		var expiration_year = document.querySelector('#expiration-year').value;
+		if (expiration_year != '{{ update_cards.expiry_year }}') {
+			$("#button-update-card").attr("disabled", false);
+		} else {
+			if ('{{update_cards.address_id}}' != address_id) {
+				$("#button-update-card").attr("disabled", false);
+			} else {
+				$("#button-update-card").attr("disabled", true);
+			}
+		}
+	});
+
+	$('#expiration-month').change(function() {
+		let address_id = $('#payment-existing :selected').val();
+		var expiration_month = document.querySelector('#expiration-month').value;
+		if (expiration_month != '{{ update_cards.expiry_month }}') {
+			$("#button-update-card").attr("disabled", false);
+		} else {
+			if ('{{update_cards.address_id}}' != address_id) {
+				$("#button-update-card").attr("disabled", false);
+			} else {
+				$("#button-update-card").attr("disabled", true);
+			}
+		}
+	});
+
+	var address_id = 0;
+
+	$(document).delegate('#button-payment-address', 'click', function() {
+		let is_error = false;
+		$.ajax({
+			url: 'index.php?route=extension/credit_card/cybersource/confirmSave',
+			type: 'post',
+			data: $('#collapse-payment-address input[type=\'text\'], #collapse-payment-address input[type=\'date\'], #collapse-payment-address input[type=\'datetime-local\'], #collapse-payment-address input[type=\'time\'], #collapse-payment-address input[type=\'password\'], #collapse-payment-address input[type=\'checkbox\']:checked, #collapse-payment-address input[type=\'radio\']:checked, #collapse-payment-address input[type=\'hidden\'], #collapse-payment-address textarea, #collapse-payment-address select'),
+			dataType: 'json',
+			beforeSend: function() {
+				$('#button-payment-address').button('loading');
+			},
+			complete: function() {
+				$('#button-payment-address').button('reset');
+			},
+			success: function(json) {
+				$('.alert-dismissible, .text-danger').remove();
+				$('.form-group').removeClass('has-error');
+				if (json['error']) {
+					is_error = true;
+					if (json['error']['warning']) {
+						$('#collapse-payment-address .panel-body').prepend('<div class="alert alert-warning alert-dismissible">' + json['error']['warning'] + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+					}
+					for (i in json['error']) {
+						var element = $('#input-payment-' + i.replace('_', '-'));
+						if ($(element).parent().hasClass('input-group')) {
+							$(element).parent().after('<div class="text-danger">' + json['error'][i] + '</div>');
+						} else {
+							$(element).after('<div class="text-danger">' + json['error'][i] + '</div>');
+						}
+					}
+					$('.text-danger').parent().parent().addClass('has-error');
+					$("#button-update-card").attr("disabled", true);
+
+				} else {
+					address_id = $('#payment-existing :selected').val();
+					if ('{{update_cards.address_id}}' != address_id) {
+						$("#button-update-card").attr("disabled", false);
+					} else {
+						var expiration_month = document.querySelector('#expiration-month').value;
+						var expiration_year = document.querySelector('#expiration-year').value;
+						if (expiration_month != '{{ update_cards.expiry_month }}' || expiration_year != '{{ update_cards.expiry_year }}') {
+							$("#button-update-card").attr("disabled", false);
+						} else {
+							$("#button-update-card").attr("disabled", true);
+						}
+					}
+					$('#collapse-payment-address').collapse("hide");
+				}
+			},
+			error: function(xhr, ajaxOptions, thrownError) {
+				console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+				showPopMsg('{{error_failure}}');
+			}
+		}).done(function() {
+			$.ajax({
+				url: 'index.php?route=checkout/payment_address',
+				dataType: 'html',
+				success: function(html) {
+					if (!is_error) {
+						$('#collapse-payment-address .panel-body').html(html);
+					}
+					address_id = $('#payment-existing :selected').val();
+				},
+				error: function(xhr, ajaxOptions, thrownError) {
+					console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+					showPopMsg('{{error_failure}}');
+				}
+			});
+		});
+	});
+
+	var time_out_in_ms = 180000;
+
+	$('#button-update-card').on('click', function() {
+		var current_date = new Date();
+		var field_validations = false;
+		var expiration_month = document.querySelector('#expiration-month').value;
+		var expiration_year = document.querySelector('#expiration-year').value;
+		var current_month = current_date.getMonth() + 1;
+		var current_year = current_date.getFullYear();
+		var csrf_token = "{{csrf_token_data}}";
+		if (expiration_year == current_year) {
+			if (expiration_month < current_month) {
+				$('.alert-dismissible').remove();
+				$('#error_msg').before('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + '{{error_expiry_date}}' + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+			} else {
+				field_validations = true;
+				$('.alert-dismissible').remove();
+			}
+		} else {
+			field_validations = true;
+			$('.alert-dismissible').remove();
+		}
+		if (field_validations) {
+			try {
+				$.ajax({
+					type: 'POST',
+					url: 'index.php?route=extension/credit_card/cybersource/confirmExecuteCardUpdate',
+					dataType: 'json',
+					data: {
+						card_id: "{{update_cards.card_id}}",
+						expiration_month: $("[name=expiration-month]").val(),
+						expiration_year: $("[name=expiration-year]").val(),
+						address_id: address_id,
+						csrf_token: csrf_token
+					},
+					beforeSend: function() {
+						$('#button-update-card').button('loading');
+					},
+					success: function(json) {
+						if (json['redirect']) {
+							location = json['redirect'];
+						}
+						setTimeout(function() {
+							$('#button-update-card').button('reset');
+							showPopMsg('{{error_session_expire}}');
+						}, time_out_in_ms);
+					},
+					error: function(xhr, ajaxOptions, thrownError) {
+						console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+						$('#button-update-card').button('reset');
+						showPopMsg('{{error_failure}}');
+					}
+				});
+			} catch (exception) {
+				showPopMsg('{{error_exception}}');
+			}
+		}
+	});
+
+	$('#expiration-year').each(function() {
+		var year = (new Date()).getFullYear();
+		for (var i = 0; i <= 25; i++) {
+			$(this).append('<option value="' + (year + i) + '">' + ((year + i).toString()).substr(-2) + '</option>');
+		}
+	});
+
+	$('#expiration-month').each(function() {
+		for (var i = 1; i <= 12; i++) {
+			$(this).append('<option value="' + (i.toString()).padStart(2, '0') + '">' + (i.toString()).padStart(2, '0') + '</option>');
+		}
+	});
+
+	function showAddressDiv() {
+		$("#address-div").toggle();
+	}
+
+</script>
+
+{{ footer }}

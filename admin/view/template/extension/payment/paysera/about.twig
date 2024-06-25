@@ -1,0 +1,97 @@
+{% macro generate_link(link, text) %}
+    <a href="{{ link }}" target="_blank" rel="noopener noreferrer">{{ text }}</a>
+{% endmacro %}
+
+{{ header }}{{ column_left }}
+<div id="content">
+    <div class="page-header">
+        <div class="container-fluid">
+            <ul class="breadcrumb">
+                {% for breadcrumb in breadcrumbs %}
+                    <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="container">
+        <div class="panel">
+            <div class="panel-body">
+                <div class="panel">
+                    <div class="panel-body">
+                        <h1>{{ text_about }}</h1>
+                        <p>{{ text_about_content|format(_self.generate_link(link_paysera_account, 'Paysera')) }}</p>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-body">
+                        <h1>{{ text_getting_started }}</h1>
+                        <p>{{ text_getting_started_content }}</p>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h2>{{ text_payment }}</h2>
+                                <p>{{ text_payment_content }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h2>{{ text_delivery }}</h2>
+                                <p>{{ text_delivery_content }}</p>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><a href="{{ link_payment_gateway_checkout }}" target="_blank" rel="noopener noreferrer">{{ text_readmore }}</a></p>
+                                <p><a href="{{ link_checkout_basic }}" target="_blank" rel="noopener noreferrer">{{ text_instructions }}</a></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><a href="{{ link_checkout_delivery_service }}" target="_blank" rel="noopener noreferrer">{{ text_readmore }}</a></p>
+                                <p><a href="{{ link_delivery_basic }}" target="_blank" rel="noopener noreferrer">{{ text_instructions }}</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-body">
+                        <h1>{{ text_need_assistance }}</h1>
+                        <p>
+                            {{ text_need_assistance_content_client_support }}<br />
+                            {{ text_need_assistance_content_client_support_number }}<br />
+                            {{ text_need_assistance_content_client_support_email }}
+                        </p>
+                        <p>{{ text_need_assistance_content_languages|format(_self.generate_link(link_contactus, text_contactus))}}</p>
+                        <p>{{ ext_need_assistance_content_socialmedia|format(
+                                _self.generate_link(link_facebook, 'Facebook'),
+                                _self.generate_link(link_twitter, 'Twitter')
+                            ) }}</p>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-body">
+                        <h1>{{ text_explore }}</h1>
+                        <p>{{ text_explore_content_intro }}</p>
+                        <ul>
+                            <li>{{ text_explore_content_listitem_1 }}</li>
+                            <li>{{ text_explore_content_listitem_2 }}</li>
+                            <li>{{ text_explore_content_listitem_3|format(_self.generate_link(link_iban_account, 'IBAN')) }}</li>
+                            <li>{{ text_explore_content_listitem_4|format(
+                                    _self.generate_link(link_cart_visa, text_visa),
+                                    _self.generate_link(link_google_pay, 'Google Pay'),
+                                    _self.generate_link(link_apple_pay, 'Apple Pay')
+                                ) }}</li>
+                        </ul>
+                        <p>{{ text_explore_content_outro|format(_self.generate_link(link_mobile_application, text_mobile_app)) }}</p>
+                        <p>{{ text_explore_content_thankyou }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{ footer }}

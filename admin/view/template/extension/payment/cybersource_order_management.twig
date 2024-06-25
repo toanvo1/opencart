@@ -1,0 +1,1010 @@
+{% if fraud_management == 'Disable' %}
+  {% if is_capture_enabled == 'Enable' or (is_void_capture_enabled == 'Enable' and is_gift_certificate_exists == 0) or is_auth_reversal_enabled == 'Enable' or (is_refund_enabled == 'Enable' and remaining_refund_quantity != 0) or is_void_refund_enabled == 'Enable' %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          <i class="fa fa-comment-o"></i>
+          {{ text_order_management }}
+        </h3>
+      </div>
+      <div class="panel-body">
+        <div id="message"></div>
+        <div id="main">
+          {% if is_capture_enabled == 'Enable' %}
+            {% if remaining_capture_quantity > 1 and is_voucher_exists == 0 and is_coupon_exists == 0 and is_gift_certificate_exists == 0 and is_store_points_exists == 0 and is_reward_points_exists == 0 %}
+              <button type="submit" class="btn btn-primary button-spacing" id="button-partial-capture" onclick="partialCapture()">{{ text_button_partial_capture }}</button>
+            {% endif %}
+            <button type="submit" class="btn btn-primary button-spacing" id="button-capture" onclick="stdCapture()">{{ text_button_capture }}</button>
+          {% endif %}
+          {% if is_void_capture_enabled == 'Enable' and is_gift_certificate_exists == 0 %}
+            <button type="submit" class="btn btn-primary button-spacing" id="button-void-capture" onclick="voidCapture()">{{ text_button_void_capture }}</button>
+          {% endif %}
+          {% if is_auth_reversal_enabled == 'Enable' and is_gift_certificate_exists == 0 %}
+            <button type="submit" class="btn btn-primary button-spacing" id="button-cancel" onclick="authReversal()">{{ text_button_auth_reversal }}</button>
+          {% endif %}
+          {% if is_refund_enabled == 'Enable' %}
+            {% if remaining_refund_quantity > 1 and is_voucher_exists == 0 and is_coupon_exists == 0 and is_store_points_exists == 0 and is_reward_points_exists == 0 %}
+              <button type="submit" class="btn btn-primary button-spacing" id="button-partial-refund" onclick="partialRefund()">{{ text_button_partial_refund }}</button>
+            {% endif %}
+            <button type="submit" class="btn btn-primary button-spacing" id="button-refund" onclick="stdRefund()">{{ text_button_refund }}</button>
+          {% endif %}
+          {% if is_void_refund_enabled == 'Enable' %}
+            <button type="submit" class="btn btn-primary button-spacing" id="button-void-refund" onclick="voidRefund()">{{ text_button_void_refund }}</button>
+          {% endif %}
+          <div id="partial-capture-div" class="form-group" style="display: none;">
+            <fieldset>
+              <legend>
+                {{ text_button_partial_capture }}
+              </legend>
+              <div id="error_shipping_capture"></div>
+              <form class="form-horizontal" id="partial-capture" method="post">
+                <div class="table-responsive">
+                  <table id="partial-capture-orders" class="table table-bordered">
+                    <thead>
+                      <tr>
+                        <td class="text-center col-md-1">
+                          {{ column_product }}
+                        </td>
+                        <td class="text-center col-md-1">
+                          {{ column_model }}
+                        </td>
+                        <td class="text-center col-md-1">
+                          {{ column_quantity }}
+                        </td>
+                        <td class="text-center col-md-1">
+                          {{ column_price }}
+                        </td>
+                        <td class="text-center col-md-1">
+                          {{ column_total }}
+                        </td>
+                        <td class="text-center col-md-1">
+                          {{ column_capture }}
+                        </td>
+                        <td class="text-center col-md-2">
+                          {{ column_capture_quantity }}
+                        </td>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for product in om_products %}
+                        {% set available_capture_quantity = product.quantity - product.void_capture_quantity %}
+                        {% if available_capture_quantity != 0 %}
+                          <tr class="product-partial-capture-row">
+                            <td class="text-center">
+                              <a href="{{ product.href }}">{{ product.name }}</a>
+                              {% for option in product.option %}
+                                <br />
+                                {% if option.type != 'file' %}
+                                  &nbsp;
+                                  <small>
+                                    -
+                                    {{ option.name }}:
+                                    {{ option.value }}
+                                  </small>
+                                {% else %}
+                                  &nbsp;
+                                  <small>
+                                    -
+                                    {{ option.name }}:
+                                    <a href="{{ option.href }}">{{ option.value }}</a>
+                                  </small>
+                                {% endif %}
+                              {% endfor %}
+                            </td>
+                            <td class="text-center">
+                              {{ product.model }}
+                            </td>
+                            <td class="text-center">
+                              {{ available_capture_quantity }}
+                            </td>
+                            <td class="text-center">
+                              {{ product.price }}
+                            </td>
+                            <td class="text-center">
+                              {{ product.total }}
+                            </td>
+
+                            {% set remaining_quantity = product.quantity - product.capture_quantity %}
+                            {% if product.capture_quantity - product.quantity == 0 %}
+                              <td class="text-center">
+                                <input type="checkbox" id="myCheck_{{ product.order_product_id }}" class="myCheck" name="myCheck[]" value="{{ product.order_product_id }}" disabled />
+                              </td>
+                              <td class="text-center">
+                                <center>
+                                  <div class="input-group col-md-5">
+                                    <input type="text" id="quantity_partial-capture_{{ product.order_product_id }}" name="quantity_{{ product.order_product_id }}" class="form-control" value="" disabled />
+                                    <div class="input-group-addon">
+                                      /{{ remaining_quantity }}
+                                    </div>
+                                  </div>
+                                </center>
+                              </td>
+                            {% else %}
+                              <td class="text-center">
+                                <input type="checkbox" id="myCheck_{{ product.order_product_id }}" class="myCheck" name="myCheck[]" onchange="getCancelQuantity(this,{{ product.order_product_id }},{{ remaining_quantity }}, 'partial-capture')" onclick="enableCapture({{ product.order_product_id }})" />
+                              </td>
+                              <td class="text-center">
+                                <center>
+                                  <div class="input-group col-md-5">
+                                    <input type="text" id="quantity_partial-capture_{{ product.order_product_id }}" name="quantity_{{ product.order_product_id }}" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '');" onkeyup="getQuantity(this,{{ product.order_product_id }},{{ remaining_quantity }},'capture')" />
+                                    <div class="input-group-addon">
+                                      /{{ remaining_quantity }}
+                                    </div>
+                                  </div>
+                                  <p class="text-danger" id="error_capture_{{ product.order_product_id }}"></p>
+                                </center>
+                              </td>
+                            {% endif %}
+                          </tr>
+                        {% endif %}
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                {% if shipping_amount != 0 and is_shipping_available == 'NO' %}
+                  <div class="line-spacing">
+                    <label>
+                      <input type="checkbox" id="shipping_flag" name="shipping_flag" value="{{ shipping_amount }}" />
+                      <b>{{ text_include_shipping_cost }}</b>
+                    </label>
+                  </div>
+                {% endif %}
+                <label>{{ text_partial_capture }}</label>
+              </form>
+            </fieldset>
+            <div class="text-right">
+              <button type="button" class="button btn btn-primary button-spacing-for-yes-no" id="button-partial-capture-no">{{ text_no }}</button>
+              <span class="btn btn-primary" style="display: none;" id="loading-capture"></span>
+              <button type="button" class="button btn btn-primary button-spacing-for-yes-no" id="button-partial-capture-yes" data-loading-text="{{ text_loading }}" disabled>{{ text_yes }}</button>
+              <span class="btn btn-primary" style="display: none;" id="loading-capture"></span>
+            </div>
+          </div>
+          <div id="standard-capture-div" class="form-group" style="display: none;">
+            <fieldset>
+              <legend>
+                {{ text_button_capture }}
+              </legend>
+              <label>{{ text_capture }}</label>
+            </fieldset>
+            <div class="text-right">
+              <button type="button" class="button btn btn-primary button-spacing-for-yes-no" id="button-capture-no">{{ text_no }}</button>
+              <span class="btn btn-primary" style="display: none;" id="loading-capture"></span>
+              <button type="button" class="button btn btn-primary button-spacing-for-yes-no" id="button-capture-yes" data-loading-text="{{ text_loading }}">{{ text_yes }}</button>
+              <span class="btn btn-primary" style="display: none;" id="loading-capture"></span>
+            </div>
+          </div>
+          <div id="standard-refund-div" class="form-group" style="display: none;">
+            <fieldset>
+              <legend>
+                {{ text_button_refund }}
+              </legend>
+              <div id="error_shipping_refund"></div>
+              {% if shipping_amount != 0 and is_shipping_voided != 1 and is_shipping_refunded == 0 %}
+                <div class="line-spacing">
+                  <label>
+                    <input type="checkbox" id="refund_shipping_flag" name="refund_shipping_flag" value="{{ shipping_amount }}" />
+                    <b>{{ text_include_shipping_cost }}</b>
+                  </label>
+                </div>
+              {% endif %}
+              <label>{{ text_refund }}</label>
+            </fieldset>
+            <div class="text-right">
+              <button type="button" class="button btn btn-primary button-spacing-for-yes-no" id="button-refund-no">{{ text_no }}</button>
+              <span class="btn btn-primary" style="display: none;"></span>
+              <button type="button" class="button btn btn-primary button-spacing-for-yes-no" id="button-refund-yes" data-loading-text="{{ text_loading }}">{{ text_yes }}</button>
+              <span class="btn btn-primary" style="display: none;"></span>
+            </div>
+          </div>
+          <div id="auth-reversal-div" class="form-group" style="display: none;">
+            <fieldset>
+              <legend>
+                {{ text_button_auth_reversal }}
+              </legend>
+              <label>{{ text_auth_reversal }}</label>
+            </fieldset>
+            <div class="text-right">
+              <button type="button" class="button btn btn-primary button-spacing-for-yes-no" id="button-cancel-no">{{ text_no }}</button>
+              <span class="btn btn-primary" style="display: none;" id="loading-cancel"></span>
+              <button type="button" class="button btn btn-primary button-spacing-for-yes-no" id="button-cancel-yes" data-loading-text="{{ text_loading }}">{{ text_yes }}</button>
+              <span class="btn btn-primary" style="display: none;" id="loading-cancel"></span>
+            </div>
+          </div>
+          <div id="void-capture-div" class="form-group" style="display: none;">
+            <fieldset>
+              <legend>
+                {{ text_button_void_capture }}
+              </legend>
+              <label>{{ text_void_capture }}</label>
+            </fieldset>
+            <div class="text-right">
+              <button type="button" class="button btn btn-primary button-spacing-for-yes-no" id="button-void-capture-no">{{ text_no }}</button>
+              <span class="btn btn-primary" style="display: none;" id="loading-void-capture"></span>
+              <button type="button" class="button btn btn-primary button-spacing-for-yes-no" id="button-void-capture-yes" data-loading-text="{{ text_loading }}">{{ text_yes }}</button>
+              <span class="btn btn-primary" style="display: none;" id="loading-void-capture"></span>
+            </div>
+          </div>
+          <div id="partial-refund-div" class="form-group" style="display: none;">
+            <fieldset>
+              <legend>
+                {{ text_button_refund }}
+              </legend>
+              <form class="form-horizontal" id="refund" method="post">
+                <div class="table-responsive">
+                  <table class="table table-bordered panel-body" id="refund-orders">
+                    <thead>
+                      <tr>
+                        <td class="text-center col-md-1">
+                          {{ column_product }}
+                        </td>
+                        <td class="text-center col-md-1">
+                          {{ column_model }}
+                        </td>
+                        <td class="text-center col-md-1">
+                          {{ column_quantity }}
+                        </td>
+                        <td class="text-center col-md-1">
+                          {{ column_price }}
+                        </td>
+                        <td class="text-center col-md-1">
+                          {{ column_total }}
+                        </td>
+                        <td class="text-center col-md-1">
+                          {{ column_refund }}
+                        </td>
+                        <td class="text-center col-md-2">
+                          {{ column_refund_quantity }}
+                        </td>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for product in om_products %}
+                        {% set available_quantity = product.quantity - product.void_capture_quantity - product.void_refund_quantity %}
+                        {% if available_quantity != 0 %}
+                          <tr class="product-refund-row">
+                            <td class="text-center">
+                              <a href="{{ product.href }}">{{ product.name }}</a>
+                              {% for option in product.option %}
+                                <br />
+                                {% if option.type != 'file' %}
+                                  &nbsp;
+                                  <small>
+                                    -
+                                    {{ option.name }}:
+                                    {{ option.value }}
+                                  </small>
+                                {% else %}
+                                  &nbsp;
+                                  <small>
+                                    -
+                                    {{ option.name }}:
+                                    <a href="{{ option.href }}">{{ option.value }}</a>
+                                  </small>
+                                {% endif %}
+                              {% endfor %}
+                            </td>
+                            <td class="text-center">
+                              {{ product.model }}
+                            </td>
+                            <td class="text-center">
+                              {{ available_quantity }}
+                            </td>
+                            <td class="text-center">
+                              {{ product.price }}
+                            </td>
+                            <td class="text-center">
+                              {{ product.total }}
+                            </td>
+                            {% set remaining_refund_quantity = product.quantity - product.refund_quantity - product.void_capture_quantity %}
+                            {% if remaining_refund_quantity == 0 %}
+                              <td class="text-center">
+                                <input type="checkbox" id="my_check_refund_{{ product.order_product_id }}" class="myCheck" name="myCheck[]" value="{{ product.order_product_id }}" disabled />
+                              </td>
+                              <td class="text-center">
+                                <center>
+                                  <div class="input-group col-md-5">
+                                    <input type="text" id="quantity_refund_{{ product.order_product_id }}" name="quantity_{{ product.order_product_id }}" class="form-control" value="" disabled />
+                                    <div class="input-group-addon">
+                                      /{{ remaining_refund_quantity }}
+                                    </div>
+                                  </div>
+                                </center>
+                              </td>
+                            {% else %}
+                              <td class="text-center">
+                                <input type="checkbox" id="my_check_refund_{{ product.order_product_id }}" class="myCheck" name="myCheck[]" onchange="getCancelQuantity(this,{{ product.order_product_id }},{{ remaining_refund_quantity }}, 'refund')" onclick="enableRefund({{ product.order_product_id }})" />
+                              </td>
+                              <td class="text-center">
+                                <center>
+                                  <div class="input-group col-md-5">
+                                    <input type="text" id="quantity_refund_{{ product.order_product_id }}" name="quantity_{{ product.order_product_id }}" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '');" onkeyup="getQuantity(this,{{ product.order_product_id }},{{ remaining_refund_quantity }},'refund')" />
+                                    <div class="input-group-addon">
+                                      /{{ remaining_refund_quantity }}
+                                    </div>
+                                  </div>
+                                  <p class="text-danger" id="error_refund_{{ product.order_product_id }}"></p>
+                                </center>
+                              </td>
+                            {% endif %}
+                          </tr>
+                        {% endif %}
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                {% if shipping_amount != 0 and is_shipping_voided != 1 and is_shipping_refunded == 0 %}
+                  <div class="line-spacing">
+                    <label>
+                      <input type="checkbox" id="refund_shipping_flag_std" name="refund_shipping_flag" value="{{ shipping_amount }}" />
+                      <b>{{ text_include_shipping_cost }}</b>
+                    </label>
+                  </div>
+                {% endif %}
+                <label>{{ text_partial_refund }}</label>
+              </form>
+            </fieldset>
+            <div class="text-right">
+              <button type="button" class="button btn btn-primary button-spacing-for-yes-no" id="button-partial-refund-no">{{ text_no }}</button>
+              <span class="btn btn-primary" style="display: none;" id="loading-refund"></span>
+              <button type="button" class="button btn btn-primary button-spacing-for-yes-no" id="button-partial-refund-yes" disabled data-loading-text="{{ text_loading }}">{{ text_yes }}</button>
+              <span class="btn btn-primary" style="display: none;" id="loading-refund"></span>
+            </div>
+          </div>
+          <div id="void-refund-div" class="form-group" style="display: none;">
+            <fieldset>
+              <legend>
+                {{ text_button_void_refund }}
+              </legend>
+              <label>{{ text_void_refund }}</label>
+            </fieldset>
+            <div class="text-right">
+              <button type="button" class="button btn btn-primary button-spacing-for-yes-no" id="button-void-refund-no">{{ text_no }}</button>
+              <span class="btn btn-primary" style="display: none;" id="loading-void-refund"></span>
+              <button type="button" class="button btn btn-primary button-spacing-for-yes-no" id="button-void-refund-yes" data-loading-text="{{ text_loading }}">{{ text_yes }}</button>
+              <span class="btn btn-primary" style="display: none;" id="loading-void-refund"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endif %}
+
+<script type = "text/javascript">
+	$("#button-partial-capture-no").click(function() {
+		$('#partial-capture-div').hide();
+	});
+
+	$("#button-void-capture-no").click(function() {
+		$('#void-capture-div').hide();
+	});
+
+	$("#button-cancel-no").click(function() {
+		$('#auth-reversal-div').hide();
+	});
+
+	$("#button-capture-no").click(function() {
+		$('#standard-capture-div').hide();
+	});
+
+	$("#button-refund-no").click(function() {
+		$('#standard-refund-div').hide();
+	});
+
+	$("#button-void-refund-no").click(function() {
+		$('#void-refund-div').hide();
+	});
+
+	$("#button-partial-refund-no").click(function() {
+		$('#partial-refund-div').hide();
+	});
+
+	var general_error = '{{error_msg_try_again}}';
+
+	var partial = document.getElementById('partial-capture-div');
+	var capture = document.getElementById('standard-capture-div');
+	var auth_reversal = document.getElementById('auth-reversal-div');
+	var void_capture = document.getElementById('void-capture-div');
+	var refund = document.getElementById('partial-refund-div');
+	var void_refund = document.getElementById('void-refund-div');
+	var standard_refund = document.getElementById('standard-refund-div');
+
+	function partialCapture() {
+		if (partial.style.display == 'none') {
+			partial.style.display = 'block';
+			capture.style.display = 'none';
+			auth_reversal.style.display = 'none';
+			void_capture.style.display = 'none';
+			refund.style.display = 'none';
+			void_refund.style.display = 'none';
+			standard_refund.style.display = 'none';
+		} else {
+			partial.style.display = 'none';
+		}
+	}
+
+	function stdCapture() {
+		if (capture.style.display == 'none') {
+			partial.style.display = 'none';
+			capture.style.display = 'block';
+			auth_reversal.style.display = 'none';
+			void_capture.style.display = 'none';
+			refund.style.display = 'none';
+			void_refund.style.display = 'none';
+			standard_refund.style.display = 'none';
+		} else {
+			capture.style.display = 'none';
+		}
+	}
+
+	function stdRefund() {
+		if (standard_refund.style.display == 'none') {
+			partial.style.display = 'none';
+			standard_refund.style.display = 'block';
+			auth_reversal.style.display = 'none';
+			void_capture.style.display = 'none';
+			refund.style.display = 'none';
+			void_refund.style.display = 'none';
+			capture.style.display = 'none';
+		} else {
+			standard_refund.style.display = 'none';
+		}
+	}
+
+	function authReversal() {
+		if (auth_reversal.style.display == 'none') {
+			partial.style.display = 'none';
+			capture.style.display = 'none';
+			auth_reversal.style.display = 'block';
+			void_capture.style.display = 'none';
+			refund.style.display = 'none';
+			void_refund.style.display = 'none';
+			standard_refund.style.display = 'none';
+		} else {
+			auth_reversal.style.display = 'none';
+		}
+	}
+
+	function voidCapture() {
+		if (void_capture.style.display == 'none') {
+			partial.style.display = 'none';
+			capture.style.display = 'none';
+			auth_reversal.style.display = 'none';
+			void_capture.style.display = 'block';
+			refund.style.display = 'none';
+			void_refund.style.display = 'none';
+			standard_refund.style.display = 'none';
+		} else {
+			void_capture.style.display = 'none';
+		}
+	}
+
+	function partialRefund() {
+		if (refund.style.display == 'none') {
+			partial.style.display = 'none';
+			capture.style.display = 'none';
+			auth_reversal.style.display = 'none';
+			void_capture.style.display = 'none';
+			refund.style.display = 'block';
+			void_refund.style.display = 'none';
+			standard_refund.style.display = 'none';
+		} else {
+			refund.style.display = 'none';
+		}
+	}
+
+	function voidRefund() {
+		if (void_refund.style.display == 'none') {
+			partial.style.display = 'none';
+			capture.style.display = 'none';
+			auth_reversal.style.display = 'none';
+			void_capture.style.display = 'none';
+			refund.style.display = 'none';
+			void_refund.style.display = 'block';
+			standard_refund.style.display = 'none';
+		} else {
+			void_refund.style.display = 'none';
+		}
+	}
+
+	function enableCapture(order_product_id) {
+		$("#error_capture_" + order_product_id).html("");
+		$("#button-partial-capture-yes").attr("disabled", false);
+	}
+
+	function enableRefund(order_product_id) {
+		$("#error_refund_" + order_product_id).html("");
+		$("#button-partial-refund-yes").attr("disabled", false);
+	}
+
+	function getCancelQuantity(itself, order_product_id, quantity, service) {
+		var count = 0;
+		var disable_count = 0;
+		if (service == "partial-capture") {
+			service_value = "#partial-capture-orders tr.product-partial-capture-row";
+		} else {
+			service_value = "#refund-orders tr.product-refund-row";
+		}
+		$(service_value).each(function() {
+			count++;
+			check_box_disabled = $(this).find("input[name^='myCheck']").is(':checked');
+			if (check_box_disabled) {
+				disable_count++;
+			}
+		});
+		if (disable_count == 0) {
+			$("#button-" + service + "-yes").attr("disabled", true);
+		}
+		$("#quantity_" + service + "_" + order_product_id).val($(itself).prop("checked") ? quantity : "");
+	}
+
+	function getQuantity(thisitself, order_product_id, quantity, service) {
+		var check_box = null;
+		var service_id = null;
+		var error_id = null;
+		var entered_quantity = $(thisitself).val().trim();
+		var regex_number = /^\d+$/;
+		if (service == 'capture') {
+			check_box = document.getElementById("myCheck_" + order_product_id);
+			service_id = "#button-partial-capture-yes";
+			error_id = "#error_capture_";
+		} else {
+			check_box = document.getElementById("my_check_refund_" + order_product_id);
+			service_id = "#button-partial-refund-yes";
+			error_id = "#error_refund_";
+		}
+		if ((!regex_number.test(entered_quantity)) || entered_quantity == "" || entered_quantity < 0 || entered_quantity == 0 || entered_quantity > quantity) {
+			$(service_id).attr("disabled", true);
+			$(error_id + order_product_id).html("{{error_capture_quantity}}");
+		} else {
+			$(error_id + order_product_id).html("");
+			if (check_box.checked == false) {
+				if (service == 'capture') {
+					$("#myCheck_" + order_product_id).prop("checked", true);
+				} else {
+					$("#my_check_refund_" + order_product_id).prop("checked", true);
+				}
+				$(service_id).attr("disabled", false);
+			} else {
+				$(service_id).attr("disabled", false);
+			}
+		}
+	}
+
+	$("#button-partial-capture-yes").click(function() {
+		if ($("p[class='text-danger'][id*='error_capture_']").text() != '') {
+			$('#button-partial-capture-yes').attr("disabled", true);
+			return;
+		}
+		var $inputs = $("#partial-capture :input[type='text']");
+		var values = {};
+		var total = 0;
+		var set_capture_shipping_error = false;
+		$inputs.each(function() {
+			values[this.name] = $(this).val();
+			quantity = $(this).val().trim();
+			if (quantity != "")
+				total = total + parseInt(quantity);
+		});
+		var shipping_amount = 0;
+		var shipping_flag = false;
+		if ($("#shipping_flag").prop("checked") == true) {
+			shipping_amount = $("#shipping_flag").val();
+			shipping_flag = $("#shipping_flag").prop("checked");
+		}
+		if ("{{capture_quantity}}" != 0) {
+			total = parseInt(total) + parseInt("{{capture_quantity}}");
+		}
+		total_shipping = parseFloat("{{shipping_amount}}");
+
+		if (total_shipping != 0) {
+			shippingSelected = $("#shipping_flag").is(":checked");
+			if (total == parseInt("{{authorized_quantity}}") && "{{is_shipping_available}}" == "NO" && !shippingSelected && parseFloat(total_shipping) != 0) {
+				set_capture_shipping_error = true;
+			}
+		}
+		if (set_capture_shipping_error == true) {
+			$('.alert-dismissible').remove();
+			$('#error_shipping_capture').html('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{error_shipping_cost_select}} <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+		} else {
+			$('#error_shipping_capture').empty();
+			$.ajax({
+				type: 'POST',
+				cache: false,
+				dataType: 'json',
+				data: {
+					'order_id': '{{ order_id }}',
+					'quantity': values,
+					'shipping_amount': shipping_amount,
+					'shipping_flag': shipping_flag
+				},
+				url: 'index.php?route=extension/payment/{{payment_code}}/confirmPartialCapture&user_token={{ user_token }}',
+				beforeSend: function() {
+					$("#main *").attr('disabled', true);
+					$('#button-partial-capture-yes').button('loading');
+				},
+				complete: function() {
+					$("#main *").attr('disabled', false);
+					$('#button-partial-capture-yes').button('reset');
+				},
+				success: function(data) {
+					console.log(data);
+					if (data.error_flag == false) {
+						$('#partial-capture')[0].reset();
+						$('#main').hide();
+						$('.alert-dismissible').remove();
+						$('#message').before('<div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> ' + data.message + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+					} else {
+						$('#main').hide();
+						$('.alert-dismissible').remove();
+						$('#message').before('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + data.message + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+					}
+					setTimeout(() => {
+						location.reload();
+					}, 2000);
+				},
+				error: function(data) {
+					$('#main').hide();
+					$('.alert-dismissible').remove();
+					$('#message').before('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + general_error + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+					setTimeout(() => {
+						location.reload();
+					}, 2000);
+				}
+			});
+		}
+	});
+
+	$("#button-capture-yes").click(function() {
+		$.ajax({
+			type: 'POST',
+			cache: false,
+			dataType: 'json',
+			data: {
+				'order_id': '{{ order_id }}'
+			},
+			url: 'index.php?route=extension/payment/{{payment_code}}/confirmCapture&user_token={{ user_token }}',
+			beforeSend: function() {
+				$("#main *").attr('disabled', true);
+				$('#button-capture-yes').button('loading');
+			},
+			complete: function() {
+				$("#main *").attr('disabled', false);
+				$('#button-capture-yes').button('reset');
+			},
+			success: function(data) {
+				console.log(data);
+				if (data.error_flag == false) {
+					$('#main').hide();
+					$('.alert-dismissible').remove();
+					$('#message').before('<div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> ' + data.message + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+				} else {
+					$('#main').hide();
+					$('.alert-dismissible').remove();
+					$('#message').before('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + data.message + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+				}
+				setTimeout(() => {
+					location.reload();
+				}, 2000);
+			},
+			error: function(data) {
+				$('#main').hide();
+				$('.alert-dismissible').remove();
+				$('#message').before('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + general_error + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+				setTimeout(() => {
+					location.reload();
+				}, 2000);
+			}
+		});
+	});
+
+	$("#button-cancel-yes").click(function() {
+		$.ajax({
+			type: 'POST',
+			dataType: 'json',
+			cache: false,
+			data: {
+				'order_id': '{{ order_id }}'
+			},
+			url: 'index.php?route=extension/payment/{{payment_code}}/confirmCancel&user_token={{ user_token }}',
+			beforeSend: function() {
+				$("#main *").attr('disabled', true);
+				$('#button-cancel-yes').button('loading');
+			},
+			complete: function() {
+				$("#main *").attr('disabled', false);
+				$('#button-cancel-yes').button('reset');
+			},
+			success: function(data) {
+				console.log(data);
+				if (data.error_flag == false) {
+					$('#main').hide();
+					$('.alert-dismissible').remove();
+					$('#message').before('<div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> ' + data.message + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+				} else {
+					$('#main').hide();
+					$('.alert-dismissible').remove();
+					$('#message').before('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + data.message + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+				}
+				setTimeout(() => {
+					location.reload();
+				}, 2000);
+			},
+			error: function(data) {
+				$('#main').hide();
+				$('.alert-dismissible').remove();
+				$('#message').before('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + general_error + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+				setTimeout(() => {
+					location.reload();
+				}, 2000);
+			}
+		});
+	});
+
+	$("#button-void-capture-yes").click(function() {
+		$.ajax({
+			type: 'POST',
+			dataType: 'json',
+			cache: false,
+			data: {
+				'order_id': '{{ order_id }}'
+			},
+			url: 'index.php?route=extension/payment/{{payment_code}}/confirmVoidCapture&user_token={{ user_token }}',
+			beforeSend: function() {
+				$("#main *").attr('disabled', true);
+				$('#button-void-capture-yes').button('loading');
+			},
+			complete: function() {
+				$("#main *").attr('disabled', false);
+				$('#button-void-capture-yes').button('reset');
+			},
+			success: function(data) {
+				console.log(data);
+				if (data.error_flag == false) {
+					$('#main').hide();
+					$('#void-capture-div').hide();
+					$('.alert-dismissible').remove();
+					$('#message').before('<div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> ' + data.message + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+				} else {
+					$('#main').hide();
+					$('#void-capture-div').hide();
+					$('.alert-dismissible').remove();
+					$('#message').before('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + data.message + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+				}
+				setTimeout(() => {
+					location.reload();
+				}, 2000);
+			},
+			error: function(data) {
+				$('#main').hide();
+				$('.alert-dismissible').remove();
+				$('#message').before('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + general_error + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+				setTimeout(() => {
+					location.reload();
+				}, 2000);
+			}
+		});
+	});
+
+	$("#button-partial-refund-yes").click(function() {
+		if ($("p[class='text-danger'][id*='error_refund_']").text() != '') {
+			$('#button-partial-refund-yes').attr("disabled", true);
+			return;
+		}
+		var $inputs = $("#refund :input[type='text']");
+		var values = {};
+		$inputs.each(function() {
+			values[this.name] = $(this).val();
+		});
+		var refund_shipping_amount = 0;
+		var refund_shipping_flag = false;
+		if ($("#refund_shipping_flag_std").prop("checked") == true) {
+			refund_shipping_amount = $("#refund_shipping_flag_std").val();
+			refund_shipping_flag = $("#refund_shipping_flag_std").prop("checked");
+		}
+		$.ajax({
+			type: 'POST',
+			cache: false,
+			dataType: 'json',
+			data: {
+				'order_id': '{{ order_id }}',
+				'quantity': values,
+				'shipping_amount': refund_shipping_amount,
+				'shipping_flag': refund_shipping_flag
+			},
+			url: 'index.php?route=extension/payment/{{payment_code}}/confirmRefund&user_token={{ user_token }}',
+			beforeSend: function() {
+				$("#main *").attr('disabled', true);
+				$('#button-partial-refund-yes').button('loading');
+			},
+			complete: function() {
+				$("#main *").attr('disabled', false);
+				$('#button-partial-refund-yes').button('reset');
+			},
+			success: function(data) {
+				console.log(data);
+				if (data.error_flag == false) {
+					$('#refund')[0].reset();
+					$('#main').hide();
+					$('.alert-dismissible').remove();
+					$('#message').before('<div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> ' + data.message + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+				} else {
+					$('#main').hide();
+					$('.alert-dismissible').remove();
+					$('#message').before('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + data.message + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+				}
+				setTimeout(() => {
+					location.reload();
+				}, 2000);
+
+			},
+			error: function(data) {
+				$('#main').hide();
+				$('.alert-dismissible').remove();
+				$('#message').before('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + general_error + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+				setTimeout(() => {
+					location.reload();
+				}, 2000);
+			}
+		});
+	});
+
+	$("#button-void-refund-yes").click(function() {
+		$.ajax({
+			type: 'POST',
+			dataType: 'json',
+			cache: false,
+			data: {
+				'order_id': '{{ order_id }}'
+			},
+			url: 'index.php?route=extension/payment/{{payment_code}}/confirmVoidRefund&user_token={{ user_token }}',
+			beforeSend: function() {
+				$("#main *").attr('disabled', true);
+				$('#button-void-refund-yes').button('loading');
+			},
+			complete: function() {
+				$("#main *").attr('disabled', false);
+				$('#button-void-refund-yes').button('reset');
+			},
+			success: function(data) {
+				console.log(data);
+				if (data.error_flag == false) {
+					$('#main').hide();
+					$('.alert-dismissible').remove();
+					$('#message').before('<div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> ' + data.message + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+				} else {
+					$('#main').hide();
+					$('.alert-dismissible').remove();
+					$('#message').before('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + data.message + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+				}
+				setTimeout(() => {
+					location.reload();
+				}, 2000);
+
+			},
+			error: function(data) {
+				$('#main').hide();
+				$('.alert-dismissible').remove();
+				$('#message').before('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + general_error + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+				setTimeout(() => {
+					location.reload();
+				}, 2000);
+			}
+		});
+	});
+
+	$("#button-refund-yes").click(function() {
+		var set_refund_shipping_error = false;
+		var refund_shipping_amount = 0;
+		var refund_shipping_flag = false;
+		if ($("#refund_shipping_flag").prop("checked") == true) {
+			refund_shipping_amount = $("#refund_shipping_flag").val();
+			refund_shipping_flag = $("#refund_shipping_flag").prop("checked");
+		}
+		total_shipping = parseFloat("{{shipping_amount}}");
+		if (total_shipping != 0) {
+			shippingSelected = $("#refund_shipping_flag").is(":checked");
+			if (parseFloat(total_shipping) == parseInt("{{authorized_amount}}") && !shippingSelected) {
+				set_refund_shipping_error = true;
+			}
+		}
+		if (set_refund_shipping_error == true) {
+			$('.alert-dismissible').remove();
+			$('#error_shipping_refund').html('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{error_refund_shipping_select}} <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+		} else {
+			$('#error_shipping_refund').empty();
+			$.ajax({
+				type: 'POST',
+				cache: false,
+				dataType: 'json',
+				data: {
+					'order_id': '{{ order_id }}',
+					'shipping_amount': refund_shipping_amount,
+					'shipping_flag': refund_shipping_flag,
+					'flag': 'stdRefund'
+				},
+				url: 'index.php?route=extension/payment/{{payment_code}}/confirmRefund&user_token={{ user_token }}',
+				beforeSend: function() {
+
+					$("#main *").attr('disabled', true);
+					$('#button-refund-yes').button('loading');
+				},
+				complete: function() {
+					$("#main *").attr('disabled', false);
+					$('#button-refund-yes').button('reset');
+				},
+				success: function(data) {
+					console.log(data);
+					if (data.error_flag == false) {
+						$('#refund')[0].reset();
+						$('#main').hide();
+						$('.alert-dismissible').remove();
+						$('#message').before('<div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> ' + data.message + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+					} else {
+						$('#main').hide();
+						$('.alert-dismissible').remove();
+						$('#message').before('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + data.message + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+					}
+					setTimeout(() => {
+						location.reload();
+					}, 2000);
+				},
+				error: function(data) {
+					$('#main').hide();
+					$('.alert-dismissible').remove();
+					$('#message').before('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + general_error + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+					setTimeout(() => {
+						location.reload();
+					}, 2000);
+				}
+			});
+		}
+	});
+
+	$(document).ready(function() {
+		$("a[data-group='EditDisable']").on("contextmenu", function() {
+			return false;
+		});
+		$("a[data-group='EditDisable']").click(function(e) {
+			return false;
+		});
+		$("#button-history").attr("disabled", true);
+	});
+	if ('{{payment_code}}' == 'cybersource' || '{{payment_code}}' == 'cybersource_echeck') {
+		var str = (window.location.href).split("order")[0];
+		str = str + 'order/edit';
+		$("a[href^='" + str + "']").addClass('disable-return');
+		$("a[href^='" + str + "']").attr("data-group", "EditDisable");
+		$("a[href^='" + str + "']").attr("href", "#");
+	}
+
+</script>
+
+<style>
+	.button-spacing-for-yes-no {
+		margin: 3px;
+	}
+
+	.button-spacing {
+		width: 130px;
+		margin: 3px;
+	}
+
+	.disable-return {
+		cursor: not-allowed;
+		pointer-events: all !important;
+	}
+
+	.display-none {
+		display: none;
+	}
+
+	.line-spacing {
+		padding: 0;
+		margin-bottom: 18px;
+		line-height: inherit;
+		border: 0;
+		border-bottom: 1px solid #e5e5e5;
+	}
+
+</style>

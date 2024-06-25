@@ -1,0 +1,40 @@
+{#
+ # 2018 Paysera
+ #
+ # NOTICE OF LICENSE
+ #
+ # This source file is subject to the Academic Free License (AFL 3.0)
+ # that is bundled with this package in the file LICENSE.txt.
+ # It is also available through the world-wide-web at this URL:
+ # http://opensource.org/licenses/afl-3.0.php
+ # If you did not receive a copy of the license and are unable to
+ # obtain it through the world-wide-web, please send an email
+ # to support@paysera.com so we can send you a copy immediately.
+ #
+ # @author    Paysera <plugins@paysera.com>
+ # @copyright 2018 Paysera
+ # @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ # International Registered Trademark & Property of Paysera
+ #}
+
+<link href="catalog/view/theme/stylesheet/paysera/checkout.css" rel="stylesheet" />
+<script src="catalog/view/javascript/paysera/checkout.js" type="text/javascript"></script>
+
+<div class="content">
+    <form action="{{ action }}" method="post" id="wtp-checkout">
+        <h3>{{ text_chosen }}</h3>
+
+        {{ payment_methods }}
+        <input type="hidden" name="paysera_payment_method" />
+
+        <div class="buttons">
+            <div class="pull-right">
+                <button id="button-confirm"
+                        class="btn btn-primary"
+                        data-loading-text="{{ text_loading }}">
+                    {{ button_confirm }}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

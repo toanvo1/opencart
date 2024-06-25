@@ -1,0 +1,73 @@
+/**
+ * 2018 Paysera
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/afl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to support@paysera.com so we can send you a copy immediately.
+ *
+ *  @author    Paysera <plugins@paysera.com>
+ *  @copyright 2018 Paysera
+ *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ *  International Registered Trademark & Property of Paysera
+ */
+
+#button-confirm {
+    text-indent: 0;
+}
+
+#paysera_country {
+    background: white;
+    padding: 0 6px 0 12px;
+}
+
+div.payment-group-title{
+    font-weight:bold;
+    clear: both;
+}
+
+div.paysera-payments div.payment {
+    display: block;
+    margin-bottom: 15px;
+}
+
+div.paysera-payments.grid div.payment{
+    display: inline-block;
+    border: 2px  outset  transparent;
+    padding: 12px 10px 6px 10px;
+    text-align: center;
+}
+
+div.paysera-payments div.payment span.paysera-text,
+div.paysera-payments div.payment img,
+div.paysera-payments.grid div.payment img {
+    cursor: pointer!important;
+}
+
+div.paysera-payments.grid div.payment.activePayseraPayment {
+    border: 2px  outset #e7ebff;
+}
+
+div.paysera-payments span.paysera-text {
+    font-weight: normal;
+    padding-right: 12px;
+}
+
+div.paysera-payments.grid input[type=radio] {
+    display: none;
+    margin-right: 6px;
+}
+
+div.paysera-payments.grid span.paysera-text {
+    display: none;
+}
+
+div.paysera-payments.grid div.paysera-image,
+div.paysera-payments div.paysera-image {
+    display:inline-block;
+}

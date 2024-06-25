@@ -1,0 +1,880 @@
+<div id="dav-block">
+  {% if not address_match %}
+    <h3>
+      {{ text_delivery_address }}
+    </h3>
+    {% if error_address %}
+      <div class="alert alert-danger alert-dismissible">
+        {{ text_warning }}
+        {{ error_address }}
+      </div>
+      <div class="buttons">
+        <div class="pull-right">
+          <input type="button" value="{{ button_continue_address }}" id="button-continue-address" data-loading-text="{{ text_loading }}" class="btn btn-primary button-spacing" onclick="buttonContinueAddress()" />
+          <input type="button" value="{{ button_edit_address }}" id="button-edit-address" data-loading-text="{{ text_loading }}" class="btn btn-primary button-spacing" onclick="buttonEditAddress()" />
+        </div>
+      </div>
+    {% else %}
+      <div class="row">
+        <div class="col-sm-4 address-border">
+          <div class="radio">
+            <label>
+              <span><input type="radio" value="recommended_address" name="address" id="recommended-address" checked="checked" /></span>
+              <span class="h4">{{ text_recommended_address }}</span>
+            </label>
+          </div>
+          <address class="address-block">
+            {{ recommended_address_format.address }}
+          </address>
+        </div>
+        <div class="col-sm-4 address-border">
+          <div class="radio">
+            <label>
+              <span><input type="radio" value="entered_address" name="address" id="entered-address" /></span>
+              <span class="h4">{{ text_address_you_entered }}</span>
+            </label>
+          </div>
+          <address class="address-block">
+            {{ entered_address_format.address }}
+          </address>
+        </div>
+      </div>
+      <div class="buttons">
+        <div class="pull-right">
+          <input type="button" value="{{ button_continue_address }}" id="button-selected-address" data-loading-text="{{ text_loading }}" class="btn btn-primary" onclick="buttonSelectedAddress()" />
+        </div>
+      </div>
+    {% endif %}
+  {% endif %}
+</div>
+
+<div id="flex-form" class="display-none">
+  {% if update_cards %}
+    <div class="panel-group" id="cards-accordion">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-heading-title">
+            <a data-toggle="collapse" data-parent="#cards-accordion" href="#saved-cards" aria-expanded="true">
+              {{ button_saved_card }}
+              <i class="fa fa-caret-down"></i>
+            </a>
+          </h4>
+        </div>
+        <div id="saved-cards" class="panel-collapse collapse in" aria-expanded="true">
+          <div class="body-padding">
+            <div id="error_cvv"></div>
+            <div class="table-responsive">
+              <table class="table table-bordered table-hover">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th class="column-width text-center">
+                      {{ column_card_number }}
+                    </th>
+                    <th class="column-width text-center">
+                      {{ column_customer_name }}
+                    </th>
+                    <th class="column-width text-center">
+                      {{ column_expiry_date }}
+                    </th>
+                    <th class="column-width text-center">
+                      {{ text_cvv_enter }}
+                    </th>
+                  </tr>
+                </thead>
+                {% for card in update_cards %}
+                  <tbody>
+                    <tr>
+                      <td class="text-center vertical-align">
+                        <div id="radio-token">
+                          <input type="radio" name="radio-token" id="radio-token" value="{{ card.card_id }}" />
+                        </div>
+                      </td>
+                      <td class="text-center vertical-align">
+                        <div>
+                          {{ card.card_number }}
+                        </div>
+                      </td>
+                      <td class="text-center vertical-align">
+                        <div>
+                          {{ card.customer_name }}
+                        </div>
+                      </td>
+                      <td class="text-center vertical-align">
+                        <div>
+                          {{ card.expiry_month }}/{{ card.expiry_year[2:] }}
+                        </div>
+                      </td>
+                      <td class="text-center display-none" id="{{ card.card_id }}">
+                        <center>
+                          <input type="password" oninput="this.value = this.value.replace(/[^0-9]/g, '');" class="form-control cvv-width" name="security_code" placeholder="•••" maxlength="4" id="security-code{{ card.card_id }}" />
+                        </center>
+                      </td>
+                    </tr>
+                  </tbody>
+                {% endfor %}
+              </table>
+            </div>
+            <div class="buttons">
+              <div class="text-right">
+                {% if recaptcha_enabled %}
+                  <input type="button" value="{{ button_confirm_order }}" id="button-confirm-saved" data-loading-text="{{ text_loading }}" class="btn btn-primary" onclick="setRecaptcha('onSubmitCard', 'NOTOKEN')" />
+                {% else %}
+                  <input type="button" value="{{ button_confirm_order }}" id="button-confirm-saved" data-loading-text="{{ text_loading }}" class="btn btn-primary" onclick="onSubmitCard('NOTOKEN')" />
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-heading-title">
+            <a data-toggle="collapse" data-parent="#cards-accordion" href="#add-new-card">
+              {{ button_add_new_card }}
+              <i class="fa fa-caret-down"></i>
+            </a>
+          </h4>
+        </div>
+        <div id="add-new-card" class="panel-collapse collapse">
+          <div class="body-padding">
+            <div>
+              <h4 class="h4 word-break">
+                {{ text_pay_with_unified_checkout }}
+              </h4>
+            </div>
+            <div id="error_msg"></div>
+            {% if error_form_load %}
+              <div class="alert alert-danger alert-dismissible">
+                {{ error_form_load }}
+              </div>
+            {% else %}
+              <div class="row">
+                <input type="hidden" id="capture-context" value="{{ capture_context }}" />
+                <div class="col-sm-4 col-sm-offset-4">
+                  {% if logged and token == 1 %}
+                    <div class="text-center">
+                      <input type="checkbox" id="my-check" name="my-check" value="1" />
+                      <label for="my-check">{{ text_checkbox }}</label>
+                    </div>
+                  {% endif %}
+                  <div id="buttonPaymentListContainer"></div>
+                </div>
+                <div id="embeddedPaymentContainer"></div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div id="add_new_card">
+      <div>
+        <h4 class="h4 word-break">
+          {{ text_pay_with_unified_checkout }}
+        </h4>
+      </div>
+      <div id="error_msg"></div>
+      {% if error_form_load %}
+        <div class="alert alert-danger alert-dismissible">
+          {{ error_form_load }}
+        </div>
+      {% else %}
+        <div class="row">
+          <input type="hidden" id="capture-context" value="{{ capture_context }}" />
+          <div class="col-sm-4 col-sm-offset-4">
+            {% if logged and token == 1 %}
+              <div class="text-center">
+                <input type="checkbox" id="my-check" name="my-check" value="1" />
+                <label for="my-check">{{ text_checkbox }}</label>
+              </div>
+            {% endif %}
+            <div id="buttonPaymentListContainer"></div>
+          </div>
+          <div id="embeddedPaymentContainer"></div>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{# {% endif %} #}
+
+<iframe name="”ddc-iframe”" height="1" width="1" class="display-none"></iframe>
+
+<form id="ddc-form" target="”ddc-iframe”" method="POST" action="{{ cardinal_url }}/V1/Cruise/Collect">
+  <input type="hidden" name="JWT" value />
+</form>
+
+<div id="step-up-modal" role="dialog" class="modal fade modal-display">
+  {# TODO PENDING: check on above and below style --- without that also it is working #}
+  <div class="modal-dialog max-width">
+    <div class="modal-content">
+      <div class="modal-body">
+        <iframe name="step-up-iframe" height="400" class="frame-display"></iframe>
+        <form id="step-up-form" target="step-up-iframe" method="post" action="{{ cardinal_url }}/V2/Cruise/StepUp">
+          <input type="hidden" id="accessToken" name="JWT" value />
+          <input type="hidden" name="MD" id="merchantData" value />
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-timeout" class="modal fade" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">
+          {{ text_error }}
+        </h4>
+      </div>
+      <div class="modal-body"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+	.max-width {
+		max-width: 330px;
+	}
+
+	.button-spacing {
+		margin: 3px;
+	}
+
+	.modal {
+		z-index: 100000 !important;
+	}
+
+	.column-width {
+		width: 25%;
+	}
+
+	.cvv-width {
+		min-width: 75px;
+		max-width: 75px;
+	}
+
+	.modal-display {
+		position: fixed;
+		float: left;
+		left: 53%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		max-width: 400px;
+		min-width: 280px;
+		height: 400px;
+		min-height: 530px;
+	}
+
+	.frame-display {
+		max-width: 100%;
+		border: 3px solid #c2c2c2;
+	}
+
+	.address-border {
+		border: 1px solid #ddd;
+		margin: 5px 14px;
+		padding: 10px;
+	}
+
+	.form-border {
+		border-radius: 4px !important;
+	}
+
+	.address-block {
+		min-height: 9rem;
+		padding-left: 20px;
+	}
+
+	.vertical-align {
+		vertical-align: middle !important;
+	}
+
+	.display-none {
+		display: none;
+	}
+
+	.panel-heading-title {
+		margin-top: 0;
+		margin-bottom: 0;
+		font-size: 16px;
+		color: black;
+	}
+
+	.panel-heading-title a {
+		color: black;
+	}
+
+	.body-padding {
+		padding: 15px;
+	}
+
+	.word-break {
+		word-break: break-all;
+	}
+
+</style>
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		checkForChanges();
+	});
+
+	function loadScript(url) {
+		return new Promise((resolve, reject) => {
+			try {
+				let script = document.getElementById('UCSCRIPT');
+				if (script == null) {
+					let script_ele = document.createElement("script");
+					script_ele.type = "text/javascript";
+					script_ele.src = url;
+					script_ele.id = "UCSCRIPT";
+					script_ele.onload = () => {
+						resolve(true);
+					};
+					script_ele.onerror = () => {
+						reject(false);
+					};
+					document.body.appendChild(script_ele);
+				} else {
+					resolve(true);
+				}
+			} catch (error) {
+				reject(false);
+			}
+		});
+	}
+
+	{% if not error_form_load %}
+	loadScript('{{unified_checkout_client_library}}').then(() => {
+		var cc = document.getElementById('capture-context').value;
+		var showArgs = {
+			containers: {
+				paymentSelection: "#buttonPaymentListContainer",
+				paymentScreen: "#embeddedPaymentContainer"
+			}
+		};
+		Accept(cc).then(function(accept) {
+			return accept.unifiedPayments(false);
+		}).then(function(up) {
+			return up.show(showArgs);
+		}).then(function(tt) {
+			submit(tt);
+		}).catch(function(error) {
+			showPopMsg('{{error_failure}}');
+		});
+	}).catch(() => {
+		showPopMsg('{{error_failure}}');
+	});
+	{% endif %}
+
+	function submit(transient_token) {
+		if (Number('{{recaptcha_enabled}}')) {
+			setRecaptcha('onSubmit', transient_token);
+		} else {
+			onSubmit('NOTOKEN', transient_token);
+		}
+	}
+
+	function setRecaptcha(option, transient_token) {
+		try {
+			grecaptcha.ready(function() {
+				try {
+					grecaptcha.execute('{{recaptcha_site_key}}', {
+						action: 'submit'
+					}).then(function(token) {
+						if (option === 'onSubmitCard') {
+							onSubmitCard(token);
+						} else if (option === 'onSubmit') {
+							onSubmit(token, transient_token);
+						}
+					});
+				} catch (err) {
+					showPopMsg('{{error_recaptcha_load_failed}}');
+				}
+			});
+		} catch (err) {
+			showPopMsg('{{error_recaptcha_load_failed}}');
+		}
+	}
+
+	function processorCall(url) {
+		try {
+			$.ajax({
+				type: 'POST',
+				url: url,
+				dataType: 'json',
+				data: {},
+				success: function(response) {
+					if (response.challenge_code) {
+						callPayerAuthSetUp(response.redirect);
+					} else {
+						var page_name = (response.redirect).split("/").pop();
+						if (page_name == "checkout") {
+							$('#step-up-modal').modal('hide');
+							showPopMsg('{{error_session}}');
+						} else {
+							location.href = response.redirect;
+						}
+					}
+				},
+				error: function(xhr, ajaxOptions, thrownError) {
+					console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+					var http_url = ((xhr.responseText).split('"redirect":').pop()).slice(1, -2);
+					http_url = http_url.replaceAll("\\", '');
+					if (http_url.startsWith('http')) {
+						var url = (http_url).split("/").pop();
+						if (url == 'success' || url == 'failure') {
+							window.location.href = http_url;
+						} else {
+							showPopMsg('{{error_failure}}');
+						}
+					} else {
+						showPopMsg('{{error_failure}}');
+					}
+				}
+			});
+		} catch (exception) {
+			showPopMsg('{{error_exception}}');
+		}
+	}
+
+	var cardinal_url = "{{cardinal_url}}";
+	var saved_card = 'NO';
+	var dav_address = 0;
+	var shipping_address, shipping_city, shipping_state, shipping_country, shipping_postal;
+	var time_out_in_ms = 180000;
+
+	function checkForChanges() {
+		var dav_success = "{{ address_match }}";
+		if (dav_success == "1") {
+			if ($('#collapse-checkout-confirm').hasClass('in')) {
+				formSaveCardDisplay();
+				document.getElementById('flex-form').style.display = "block";
+			} else {
+				setTimeout(checkForChanges, 500);
+			}
+		}
+	}
+
+	function buttonSelectedAddress() {
+		var selectedRadioBtn = document.getElementsByName('address');
+		for (i = 0; i < selectedRadioBtn.length; i++) {
+			if (selectedRadioBtn[i].checked) {
+				if (selectedRadioBtn[i].value == "recommended_address") {
+					dav_address = 1;
+					shipping_address = "{{recommended_address}}";
+					shipping_city = "{{recommended_city}}";
+					shipping_state = "{{recommended_state}}";
+					shipping_country = "{{recommended_country}}";
+					shipping_postal = "{{recommended_postal_code}}";
+					document.getElementById('dav-block').style.display = "none";
+					document.getElementById('flex-form').style.display = "block";
+				} else {
+					dav_address = 0;
+					document.getElementById('dav-block').style.display = "none";
+					document.getElementById('flex-form').style.display = "block";
+				}
+			}
+		}
+		formSaveCardDisplay();
+	}
+
+	function buttonContinueAddress() {
+		dav_address = 0;
+		document.getElementById('dav-block').style.display = "none";
+		document.getElementById('flex-form').style.display = "block";
+		formSaveCardDisplay();
+	}
+
+	function buttonEditAddress() {
+		$(document).scrollTop(100);
+		$('a[href=\'#collapse-shipping-address\']').trigger('click');
+	}
+
+	function formSaveCardDisplay() {
+		$('input[name=radio-token]:first').attr('checked', true);
+		var check = $('input[name=radio-token]:first').attr("value");
+		$("#" + check).show();
+		$('input[type="radio"]').click(function() {
+			var input_value = $(this).attr("value");
+			$("#" + input_value).show();
+			$('input[type="radio"]').not(':checked').each(function() {
+				var radio_value = $(this).attr("value");
+				$("#" + radio_value).hide();
+			});
+		});
+	}
+
+	function showPopMsg(msg) {
+		$('#modal-timeout').modal('show');
+		$('.alert-dismissible').remove();
+		$('#modal-timeout .modal-body').append(`<div class="alert alert-danger alert-dismissible">	<i class="fa fa-exclamation-circle"></i> ` + msg + ` </div>`);
+	}
+
+	$("#modal-timeout .modal-header > button").click(function() {
+		$("#content *").attr('disabled', true);
+		location.reload();
+	});
+
+	function onSubmit(token, transient_token) {
+		try {
+			var csrf = "{{ csrf_token_data }}";
+			var time = "{{ time_data }}";
+			var payer_auth = "{{ payer_auth }}";
+			$.ajax({
+				type: 'POST',
+				url: 'index.php?route=extension/payment/cybersource/confirmPaymentRecaptcha',
+				dataType: 'json',
+				cache: false,
+				data: {
+					token: token,
+					csrf: csrf,
+					time: time,
+					transient_token: transient_token
+				},
+				beforeSend: function() {
+					$("a[data-parent='#cards-accordion']").filter((index, node) => !$(node).parent().parent().next().hasClass("in")).attr("href", "#");
+				},
+				success: function(response) {
+					if (response.redirect) {
+						location = response.redirect;
+					} else {
+						if (response.error) {
+							showPopMsg(response.error_warning);
+						} else {
+							invokeFlexAfterRecaptcha(response.success, payer_auth, transient_token);
+						}
+					}
+					setTimeout(function() {
+						showPopMsg('{{error_session}}');
+					}, time_out_in_ms);
+				},
+				error: function(xhr, ajaxOptions, thrownError) {
+					console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+					showPopMsg('{{error_failure}}');
+				}
+			});
+		} catch (exception) {
+			showPopMsg('{{error_exception}}');
+		}
+	}
+
+	function invokeFlexAfterRecaptcha(url, payer_auth, response) {
+		var store_card = 0;
+		if (document.querySelector('#my-check') != null) {
+			store_card = document.getElementById('my-check').checked;
+		}
+		try {
+			$.ajax({
+				type: 'POST',
+				url: url,
+				dataType: 'json',
+				data: {
+					transient_token: response,
+					dav_address,
+					shipping_address,
+					shipping_city,
+					shipping_state,
+					shipping_country,
+					shipping_postal,
+					my_check: store_card,
+					payer_auth: payer_auth
+				},
+				success: function(json) {
+					if (json.error) {
+						showPopMsg(json.error_warning);
+						$("#content *").attr('disabled', true);
+					} else {
+						if (json.payer_auth) {
+							callPayerAuthSetUp(json.url);
+						} else {
+							invokeCard(json.url);
+						}
+					}
+					setTimeout(function() {
+						showPopMsg('{{error_session}}');
+					}, time_out_in_ms);
+				},
+				error: function(xhr, ajaxOptions, thrownError) {
+					console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+					showPopMsg('{{error_failure}}');
+				}
+			});
+		} catch (exception) {
+			showPopMsg('{{error_exception}}');
+		}
+	}
+
+	function callPayerAuthSetUp(res) {
+		try {
+			$.ajax({
+				type: 'POST',
+				url: res,
+				cache: false,
+				data: {},
+				success: function(response) {
+					response = jQuery.parseJSON(response);
+					status = response.status;
+					if (status == "COMPLETED") {
+						dataCollectionUrl = response.data_collection_url;
+						accessToken = response.access_token;
+						savedCard = response.saved_card;
+						document.getElementsByName("JWT")[0].value = encodeURIComponent(accessToken);
+						var ddcForm = document.querySelector('#ddc-form');
+						if (ddcForm) {
+							ddcForm.submit();
+						}
+					} else {
+						window.location.href = response.redirect;
+					}
+				},
+				error: function(xhr, ajaxOptions, thrownError) {
+					console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+					showPopMsg('{{error_failure}}');
+				}
+			});
+		} catch (exception) {
+			showPopMsg('{{error_exception}}');
+		}
+	}
+
+	window.addEventListener("message", (event) => {
+		if (event.origin === cardinal_url) {
+			let data = JSON.parse(event.data);
+			if (data != undefined && data.Status) {
+				console.log('Data received successfully');
+			}
+			console.log('Merchant received a message:', data);
+			enrollment();
+		}
+	}, false);
+
+	function enrollment() {
+		var url = null;
+		if (saved_card == 'YES') {
+			url = 'index.php?route=extension/payment/cybersource/confirmPayerAuthSavedCardEnroll';
+		} else {
+			url = 'index.php?route=extension/payment/cybersource/confirmPayerAuthEnrollment';
+		}
+		try {
+			$.ajax({
+				type: 'POST',
+				url: url,
+				cache: false,
+				data: {
+					browser_java_enabled: navigator.javaEnabled(),
+					browser_language: navigator.language,
+					browser_color_depth: screen.colorDepth,
+					browser_screen_height: screen.height,
+					browser_screen_width: screen.width,
+					browser_time_difference: (new Date()).getTimezoneOffset()
+				},
+				success: function(response) {
+					if (response.url) {
+						var page_name = (response.url).split("/").pop();
+						if (page_name == "checkout") {
+							showPopMsg('{{error_session}}');
+						} else {
+							window.location.href = response.url;
+						}
+					} else if (response.repeat) {
+						callPayerAuthSetUp(response.repeat);
+					} else {
+						accessToken = response.access_token;
+						merchantData = response.merchant_data;
+						document.getElementById("accessToken").value = encodeURIComponent(accessToken);
+						document.getElementById("merchantData").value = encodeURIComponent(merchantData);
+						var stepUp = document.querySelector('#step-up-form');
+						if (stepUp) {
+							$('#step-up-modal').modal('show');
+							stepUp.submit();
+						}
+					}
+				},
+				error: function(xhr, ajaxOptions, thrownError) {
+					console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+					var http_url = ((xhr.responseText).split('"url":').pop()).slice(1, -2);
+					http_url = http_url.replaceAll("\\", '');
+					if (http_url.startsWith('http')) {
+						var url = (http_url).split("/").pop();
+						if (url == 'success' || url == 'failure') {
+							window.location.href = http_url;
+						} else {
+							showPopMsg('{{error_failure}}');
+						}
+					} else {
+						showPopMsg('{{error_failure}}');
+					}
+				}
+			});
+		} catch (exception) {
+			showPopMsg('{{error_exception}}');
+		}
+	}
+
+	function onSubmitCard(token) {
+		var security_code = document.getElementById("security-code" + $('#radio-token input[type=\'radio\']:checked').val()).value;
+		var field_validations = false;
+
+		if (security_code == '') {
+			$('.alert-dismissible').remove();
+			$('#error_cvv').before('<div class="alert alert-danger alert-dismissible">' + '{{error_cvv}}' + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+		} else if (security_code.length != '' && (security_code.length != 3) && (security_code.length != 4)) {
+			$('.alert-dismissible').remove();
+			$('#error_cvv').before('<div class="alert alert-danger alert-dismissible">' + '{{error_cvv}}' + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+		} else if (isNaN(security_code)) {
+			$('.alert-dismissible').remove();
+			$('#error_cvv').before('<div class="alert alert-danger alert-dismissible">' + '{{error_cvv}}' + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+		} else {
+			$('.alert-dismissible').remove();
+			$('#error_cvv').empty();
+			field_validations = true;
+		}
+
+		if (field_validations) {
+			try {
+				var csrf = "{{ csrf_token_data }}";
+				var time = "{{ time_data }}";
+				var payer_auth = "{{payer_auth}}";
+				saved_card = 'YES';
+				$.ajax({
+					type: 'POST',
+					url: 'index.php?route=extension/payment/cybersource/confirmPaymentRecaptcha',
+					dataType: 'json',
+					cache: false,
+					data: {
+						card_id: $('#radio-token input[type=\'radio\']:checked').val(),
+						security_code: document.getElementById("security-code" + $('#radio-token input[type=\'radio\']:checked').val()).value,
+						saved_card: 'YES',
+						csrf: csrf,
+						time: time,
+						token: token
+					},
+					beforeSend: function() {
+						$("a[data-parent='#cards-accordion']").filter((index, node) => !$(node).parent().parent().next().hasClass("in")).attr("href", "#");
+						$('#button-confirm-saved').button('loading');
+					},
+					success: function(response) {
+						if (response.error) {
+							showPopMsg(response.error_warning);
+						} else {
+							invokeRecaptcha(response.success, payer_auth);
+						}
+						setTimeout(function() {
+							$('#button-confirm-saved').button('reset');
+							showPopMsg('{{error_session}}');
+						}, time_out_in_ms);
+					},
+					error: function(xhr, ajaxOptions, thrownError) {
+						console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+						$('#button-confirm-saved').button('reset');
+						showPopMsg('{{error_failure}}');
+					}
+				});
+			} catch (exception) {
+				showPopMsg('{{error_exception}}');
+			}
+		}
+	}
+
+	function invokeCard(url) {
+		try {
+			$.ajax({
+				type: 'POST',
+				url: url,
+				dataType: 'json',
+				data: {},
+				success: function(response) {
+					if (response) {
+						var page_name = (response.redirect).split("/").pop();
+						if (page_name == "checkout") {
+							showPopMsg('{{error_session}}');
+						} else {
+							window.location.href = response.redirect;
+						}
+					}
+				},
+				error: function(xhr, ajaxOptions, thrownError) {
+					console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+					var http_url = ((xhr.responseText).split('"redirect":').pop()).slice(1, -2);
+					http_url = http_url.replaceAll("\\", '');
+					if (http_url.startsWith('http')) {
+						var url = (http_url).split("/").pop();
+						if (url == 'success' || url == 'failure') {
+							window.location.href = http_url;
+						} else {
+							showPopMsg('{{error_failure}}');
+						}
+					} else {
+						showPopMsg('{{error_failure}}');
+					}
+				}
+			});
+		} catch (exception) {
+			showPopMsg('{{error_exception}}');
+		}
+	}
+
+	function invokeRecaptcha(url, payer_auth) {
+		try {
+			$.ajax({
+				type: 'POST',
+				url: url,
+				dataType: 'json',
+				data: {
+					dav_address,
+					shipping_address,
+					shipping_city,
+					shipping_state,
+					shipping_country,
+					shipping_postal,
+					payer_auth: payer_auth
+				},
+				beforeSend: function() {
+					$('#button-confirm-saved').button('loading');
+				},
+				success: function(json) {
+					if (json.error) {
+						showPopMsg(json.error_warning);
+					} else {
+						if (json.payer_auth) {
+							callPayerAuthSetUp(json.url);
+						} else {
+							invokeCard(json.url);
+						}
+					}
+					setTimeout(function() {
+						$('#button-confirm-saved').button('reset');
+						showPopMsg('{{error_session}}');
+					}, time_out_in_ms);
+				},
+				error: function(xhr, ajaxOptions, thrownError) {
+					console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+					$('#button-confirm-saved').button('reset');
+					showPopMsg('{{error_failure}}');
+				}
+			});
+		} catch (exception) {
+			showPopMsg('{{error_exception}}');
+		}
+	}
+
+</script>
+
+{% if dfp_url %}
+
+  <script type="text/javascript" src="{{ dfp_url }}"></script>
+
+  <noscript>
+    <iframe class="iframe" src="{{ dfp_url }}"></iframe>
+  </noscript>
+{% endif %}
+
+{% if recaptcha_enabled %}
+
+  <script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
+
+{% endif %}
